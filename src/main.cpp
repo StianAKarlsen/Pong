@@ -2,6 +2,7 @@
 
 #include "paddle.hpp"
 #include "ball.hpp"
+#include "text.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -13,11 +14,6 @@ GLint modelPos, textModelPos;
 bool enterKeyPressedOnce = false;
 
 GameState currentGameState = GameState::START;
-
-FT_Library ft;
-FT_Face face;
-
-std::map<GLchar, Character> Characters;
 
 Paddle playerPaddle({0.0f, -0.9}, 0.02f, 0.3f, 0.00007f);
 Paddle otherPaddle({0.0f, 0.9}, 0.02f, 0.3f, 0.00007f);
@@ -45,116 +41,10 @@ GLfloat ballVertices[] = {
     ball.size, -ball.size, 0.0f,
     -ball.size, -ball.size, 0.0f};
 
-void LoadCharacterTextures()
-{
-    if (FT_Init_FreeType(&ft))
-    {
-        std::cerr << "Could not init FreeType Library" << std::endl;
-    }
-    if (FT_New_Face(ft, "C:\\Windows\\fonts\\Arial.ttf", 0, &face))
-    // if (FT_New_Face(ft, "OpenDyslexic3-Regular.ttf", 0, &face))
-    {
-        std::cerr << "Failed to load font" << std::endl;
-    }
-    FT_Set_Pixel_Sizes(face, 0, 48 * 2);
-    for (unsigned char c = 0; c < 128; c++)
-    {
-        // Load character glyph
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-        {
-            std::cerr << "Failed to load Glyph" << std::endl;
-            continue;
-        }
-
-        // Generate texture
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D,
-                     0,
-                     GL_RED,
-                     face->glyph->bitmap.width,
-                     face->glyph->bitmap.rows,
-                     0,
-                     GL_RED,
-                     GL_UNSIGNED_BYTE,
-                     face->glyph->bitmap.buffer);
-
-        // Set texture options
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Store character for later use
-        Character character = {
-            texture,
-            {(int)face->glyph->bitmap.width, (int)face->glyph->bitmap.rows},
-            {face->glyph->bitmap_left, face->glyph->bitmap_top},
-            static_cast<GLuint>(face->glyph->advance.x)};
-        Characters.insert(std::pair<GLchar, Character>(c, character));
-    }
-}
-
-void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
-{
-    // Activate corresponding render state
-    // ... (set up shaders, uniforms, etc.)
-    glUseProgram(textShaderProgram);
-
-    std::string::const_iterator c;
-    for (c = text.begin(); c != text.end(); c++)
-    {
-        Character ch = Characters[*c];
-
-        GLfloat xpos = x + ch.Bearing.x * scale;
-        GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-
-        GLfloat w = ch.Size.x * scale;
-        GLfloat h = ch.Size.y * scale;
-
-        // Update VBO for each character
-        GLfloat vertices[6][4] = {
-            {xpos, ypos + h, 0.0f, 0.0f},
-            {xpos, ypos, 0.0f, 1.0f},
-            {xpos + w, ypos, 1.0f, 1.0f},
-
-            {xpos, ypos + h, 0.0f, 0.0f},
-            {xpos + w, ypos, 1.0f, 1.0f},
-            {xpos + w, ypos + h, 1.0f, 0.0f}};
-
-        // Render glyph texture over quad
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-        glUniform1i(glGetUniformLocation(textShaderProgram, "textureSampler"), 0);
-
-        glBindVertexArray(VAO[3]);
-        static const GLfloat pos[] = {0, 0};
-
-        glUniform2fv(textModelPos, 1, pos);
-
-        // Update content of VBO memory
-        glBindVertexArray(VAO[3]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-        // Render quad
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        // Now advance cursors for next glyph
-        x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
-    }
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
-
 
 void renderGame()
 {
@@ -188,10 +78,6 @@ void renderGame()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glBindVertexArray(0);
-    
-    RenderText(std::to_string(playerScore), -0.51f,-0.03f, 0.001f);
-    RenderText(std::to_string(computerScore), 0.51f,-0.03f, 0.001f);
-
 };
 
 void renderStartScreen()
@@ -302,7 +188,7 @@ int main()
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    textShaderProgram = glCreateProgram();
+    GLuint textShaderProgram = glCreateProgram();
     glAttachShader(textShaderProgram, vertexShader);
     glAttachShader(textShaderProgram, textFragmentShader);
     glLinkProgram(textShaderProgram);
@@ -312,9 +198,10 @@ int main()
     glDeleteShader(textFragmentShader);
 
     modelPos = glGetUniformLocation(shaderProgram, "modelPos");
-    textModelPos = glGetUniformLocation(textShaderProgram, "modelPos");
+    // textModelPos = glGetUniformLocation(textShaderProgram, "modelPos");
+    Text text(textShaderProgram);
 
-    LoadCharacterTextures();
+    text.LoadCharacterTextures();
 
     glGenVertexArrays(TOTAL_VAO, VAO);
     glGenBuffers(TOTAL_VBO, VBO);
@@ -343,17 +230,6 @@ int main()
     glBindVertexArray(VAO[2]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(fullScreenVertices), fullScreenVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    glBindVertexArray(VAO[3]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
@@ -413,6 +289,8 @@ int main()
                 computerScore++;
                 ball.ResetBall(1);
             }
+            text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
+            text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
         }
         else if (currentGameState == GameState::START)
         {
@@ -421,10 +299,12 @@ int main()
         else if (currentGameState == GameState::PAUSED)
         {
             renderPauseScreen();
+            text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
+            text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
         }
 
         if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) // move playerbar
+            glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) // move playerbar
         {
             if (!enterKeyPressedOnce)
             {
