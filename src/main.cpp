@@ -15,7 +15,6 @@ bool enterKeyPressedOnce = false;
 
 GameState currentGameState = GameState::START;
 
-
 GLfloat fullScreenVertices[] = {
     -1.0f, 1.0f, 0.0f, 0.0f,
     -1.0f, -1.0f, 0.0f, 1.0f,
@@ -25,56 +24,29 @@ GLfloat fullScreenVertices[] = {
     1.0f, -1.0f, 1.0f, 1.0f,
     1.0f, 1.0f, 1.0f, 0.0f};
 
-// GLfloat barVertices[] = {
-//     playerPaddle.width, playerPaddle.height,
-//     -playerPaddle.width, playerPaddle.height,
-//     playerPaddle.width, -playerPaddle.height,
-//     -playerPaddle.width, -playerPaddle.height};
-
-// GLfloat ballVertices[] = {
-//     ball.size, ball.size, 0.0f,
-//     -ball.size, ball.size, 0.0f,
-//     ball.size, -ball.size, 0.0f,
-//     -ball.size, -ball.size, 0.0f};
-
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-void renderGame()
-{
-    glUseProgram(shaderProgram);
+// void renderGame()
+// {
+//     glUseProgram(shaderProgram);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glUniform1i(glGetUniformLocation(shaderProgram, "textureSampler"), 0);
+//     glActiveTexture(GL_TEXTURE0);
+//     glBindTexture(GL_TEXTURE_2D, textures[0]);
+//     glUniform1i(glGetUniformLocation(shaderProgram, "textureSampler"), 0);
 
-    glBindVertexArray(VAO[2]);
-    static const GLfloat pos[] = {0, 0};
-    glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_TRUE);
+//     glBindVertexArray(VAO[2]);
+//     static const GLfloat pos[] = {0, 0};
+//     glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_TRUE);
 
-    glUniform2fv(modelPos, 1, pos);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+//     glUniform2fv(modelPos, 1, pos);
+//     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // glBindVertexArray(VAO[0]);
-    // // glBindTexture(GL_TEXTURE_2D, textures[0]);
-    // glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
-    // glUniform2fv(modelPos, 1, (const GLfloat *)&playerPaddle.position);
-    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    // glUniform2fv(modelPos, 1, (const GLfloat *)&otherPaddle.position);
-    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    // glBindVertexArray(VAO[1]);
-    // glUniform2fv(modelPos, 1, (const GLfloat *)&ball.position);
-    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindVertexArray(0);
-};
+//     glBindTexture(GL_TEXTURE_2D, 0);
+//     glBindVertexArray(0);
+// };
 
 void renderStartScreen()
 {
@@ -82,26 +54,6 @@ void renderStartScreen()
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[2]);
-    glUniform1i(glGetUniformLocation(shaderProgram, "textureSampler"), 0);
-
-    glBindVertexArray(VAO[2]);
-    static const GLfloat pos[] = {0, 0};
-    glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_TRUE);
-
-    glUniform2fv(modelPos, 1, pos);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
-};
-
-void renderPauseScreen()
-{
-    renderGame();
-    glUseProgram(shaderProgram);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures[1]);
     glUniform1i(glGetUniformLocation(shaderProgram, "textureSampler"), 0);
 
     glBindVertexArray(VAO[2]);
@@ -204,23 +156,8 @@ int main()
     glGenTextures(TOTAL_TEXTURES, textures);
 
     LoadTexture(backgroundImage_png, backgroundImage_png_len, textures[0]);
-    LoadTexture(pauseImage_png, pauseImage_png_len, textures[1]);
+    // LoadTexture(pauseImage_png, pauseImage_png_len, textures[1]);
     LoadTexture(startImage_png, startImage_png_len, textures[2]);
-
-    // glBindVertexArray(VAO[0]);
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(barVertices), barVertices, GL_STATIC_DRAW);
-    // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
-    // glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    // glBindVertexArray(VAO[1]);
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(ballVertices), ballVertices, GL_STATIC_DRAW);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
     glBindVertexArray(VAO[2]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
@@ -240,8 +177,7 @@ int main()
     Paddle playerPaddle({0.0f, -0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
     Paddle otherPaddle({0.0f, 0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
 
-    Ball ball(shaderProgram,{0, 0}, {0, 1}, 0.01, 0.00011f);
-
+    Ball ball(shaderProgram, {0, 0}, {0, 1}, 0.01, 0.00011f);
 
     glUseProgram(shaderProgram);
 
@@ -272,16 +208,7 @@ int main()
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move playerbar
                 playerPaddle.Move(1, deltaTime);
 
-            // if (ball.position.x > otherPaddle.position.x + otherPaddle.width / 2)
-            //     otherPaddle.Move(1, deltaTime);
-            // else if (ball.position.x < otherPaddle.position.x - otherPaddle.width / 2)
-            //     otherPaddle.Move(-1, deltaTime);
             otherPaddle.FollowBall(ball, deltaTime);
-
-            // if (ball.position.x > playerPaddle.position.x + playerPaddle.width / 2)
-            //     playerPaddle.Move(1, deltaTime);
-            // else if (ball.position.x < playerPaddle.position.x - playerPaddle.width / 2)
-            //     playerPaddle.Move(-1, deltaTime);
             playerPaddle.FollowBall(ball, deltaTime);
 
             ball.Move(deltaTime);
@@ -305,9 +232,14 @@ int main()
         }
         else if (currentGameState == GameState::PAUSED)
         {
-            renderPauseScreen();
+            // renderPauseScreen();
+            playerPaddle.render();
+            otherPaddle.render();
+            ball.render();
             text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
             text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
+            text.RenderText("Pause", -0.5f, -0.03f, 0.005f);
+
         }
 
         if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
