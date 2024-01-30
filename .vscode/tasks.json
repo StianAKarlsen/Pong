@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++.exe build active file",
+			"command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				// "-g",
+				"-O3",
+                "${workspaceRoot}\\src\\main.cpp",
+                "${workspaceRoot}\\src\\resources.cpp",
+                "${workspaceRoot}\\src\\shaderCode.cpp",
+                "${workspaceRoot}\\src\\ball.cpp",
+                "${workspaceRoot}\\src\\paddle.cpp",
+                "-Wall",
+				"-I${workspaceRoot}\\include",
+                "-L${workspaceRoot}\\lib",
+                "-lglfw3dll",
+				"-lglew32",
+				"-lopengl32",
+				"-lwinmm",
+				"-lfreetype",
+				"-mwindows",
+				"-o",
+				"${workspaceRoot}\\bin\\pong.exe"
+			],
+			"options": {
+				"cwd": "${workspaceRoot}"
+			},
+			"problemMatcher": [
+				"$gcc"
+
+			],
+			"group": "build",
+			"detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+		}
+	]
+}
+
