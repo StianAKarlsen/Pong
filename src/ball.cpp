@@ -3,8 +3,17 @@
 #include "paddle.hpp"
 #include "ball.hpp"
 
+Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s) : shaderProgram(shaderProgram), position(p), direction(v), size(_size), speed(s)
+{
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
 
-Ball::Ball(Vec2 p, Vec2 v, GLfloat _size, GLfloat s) : position(p), direction(v), size(_size), speed(s) {}
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ballVertices), ballVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+}
 
 void Ball::Move(GLfloat deltaTime)
 {
@@ -67,4 +76,12 @@ void Ball::ResetBall(int dir)
     position.y = 0;
     direction.x = 0;
     direction.y = dir;
+}
+
+void Ball::render()
+{
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glUniform2fv(0, 1, (const GLfloat *)&position);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

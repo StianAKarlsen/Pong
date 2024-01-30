@@ -5,6 +5,9 @@ class Paddle;
 
 class Ball
 {
+    GLuint VAO, VBO;
+    GLint shaderProgram;
+
 public:
     Vec2 position; // center of ball
     Vec2 direction;
@@ -13,17 +16,24 @@ public:
     GLboolean bounceOnce = true;
     GLboolean bounceOffWallOnce = true;
 
-    Ball(Vec2 p, Vec2 v, GLfloat _size, GLfloat s);
+private:
+    GLfloat ballVertices[8] = {
+        size, size,
+        -size, size,
+        size, -size,
+        -size, -size};
+
+public:
+    Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s);
 
     void Move(GLfloat deltaTime);
 
     void CheckCollisionAndBounce(Paddle &paddle);
-
     void BounceBall(Paddle &paddle);
-
     void bounceOffWall();
-
     void ResetBall(int dir);
+
+    void render();
 };
 
 #endif //_BALL_HPP_

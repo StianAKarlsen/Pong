@@ -17,6 +17,8 @@ Text::Text(GLuint shaderProgram) : textShaderProgram(shaderProgram)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    
+    LoadCharacterTextures();
 };
 
 void Text::LoadCharacterTextures()
