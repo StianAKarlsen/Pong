@@ -2,8 +2,14 @@
 
 #include "paddle.hpp"
 
-Paddle::Paddle(Vec2 p, GLfloat h, GLfloat w, GLfloat s, GLint shaderProgram) : position(p), height(h), width(w), speed(s), shaderProgram(shaderProgram)
+Paddle::Paddle(Vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderProgram) : position(p), height(height), width(width), speed(s), shaderProgram(shaderProgram)
 {
+     GLfloat barVertices[8] = {
+        width, height,
+        -width, height,
+        width, -height,
+        -width, -height};
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 

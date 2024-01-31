@@ -13,8 +13,9 @@ private:
     GLuint textShaderProgram;
 
 public:
+    Text() {};
     Text(GLuint shaderProgram);
-    
+
     void LoadCharacterTextures();
     void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale);
   

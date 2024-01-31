@@ -13,12 +13,7 @@ public:
     GLfloat speed;
     GLint shaderProgram;
 
-    GLfloat barVertices[8] = {
-        width, height,
-        -width, height,
-        width, -height,
-        -width, -height};
-
+    Paddle() {};
     Paddle(Vec2 p, GLfloat h, GLfloat w, GLfloat s, GLint shaderProgram);
 
     void Move(int xDir, GLfloat deltaTime);

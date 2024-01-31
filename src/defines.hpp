@@ -23,8 +23,8 @@ extern unsigned int bounceSound_wav_len;
 extern unsigned char backgroundImage_png[];
 extern unsigned int backgroundImage_png_len;
 
-extern unsigned char pauseImage_png[];
-extern unsigned int pauseImage_png_len;
+// extern unsigned char pauseImage_png[];
+// extern unsigned int pauseImage_png_len;
 
 extern unsigned char startImage_png[];
 extern unsigned int startImage_png_len;

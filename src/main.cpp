@@ -1,8 +1,9 @@
 #include "defines.hpp"
 
-#include "paddle.hpp"
-#include "ball.hpp"
-#include "text.hpp"
+// #include "paddle.hpp"
+// #include "ball.hpp"
+// #include "text.hpp"
+#include "pong.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -13,7 +14,6 @@ GLuint shaderProgram, textShaderProgram;
 GLint modelPos, textModelPos;
 bool enterKeyPressedOnce = false;
 
-GameState currentGameState = GameState::START;
 
 GLfloat fullScreenVertices[] = {
     -1.0f, 1.0f, 0.0f, 0.0f,
@@ -119,43 +119,43 @@ int main()
     // glEnable(GL_DEPTH_TEST);
     // glPolygonMode(GL_BACK, GL_FILL);
 
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
+    // GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    // glCompileShader(vertexShader);
 
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
+    // GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    // glCompileShader(fragmentShader);
 
-    GLuint textFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(textFragmentShader, 1, &textFragmentShaderSource, NULL);
-    glCompileShader(textFragmentShader);
+    // GLuint textFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // glShaderSource(textFragmentShader, 1, &textFragmentShaderSource, NULL);
+    // glCompileShader(textFragmentShader);
 
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    // shaderProgram = glCreateProgram();
+    // glAttachShader(shaderProgram, vertexShader);
+    // glAttachShader(shaderProgram, fragmentShader);
+    // glLinkProgram(shaderProgram);
 
-    GLuint textShaderProgram = glCreateProgram();
-    glAttachShader(textShaderProgram, vertexShader);
-    glAttachShader(textShaderProgram, textFragmentShader);
-    glLinkProgram(textShaderProgram);
+    // GLuint textShaderProgram = glCreateProgram();
+    // glAttachShader(textShaderProgram, vertexShader);
+    // glAttachShader(textShaderProgram, textFragmentShader);
+    // glLinkProgram(textShaderProgram);
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteShader(textFragmentShader);
+    // glDeleteShader(vertexShader);
+    // glDeleteShader(fragmentShader);
+    // glDeleteShader(textFragmentShader);
 
-    modelPos = glGetUniformLocation(shaderProgram, "modelPos");
+    // modelPos = glGetUniformLocation(shaderProgram, "modelPos");
     // textModelPos = glGetUniformLocation(textShaderProgram, "modelPos");
 
-    Text text(textShaderProgram);
+    // Text text(textShaderProgram);
 
     glGenVertexArrays(TOTAL_VAO, VAO);
     glGenBuffers(TOTAL_VBO, VBO);
 
     glGenTextures(TOTAL_TEXTURES, textures);
 
-    LoadTexture(backgroundImage_png, backgroundImage_png_len, textures[0]);
+    // LoadTexture(backgroundImage_png, backgroundImage_png_len, textures[0]);
     // LoadTexture(pauseImage_png, pauseImage_png_len, textures[1]);
     LoadTexture(startImage_png, startImage_png_len, textures[2]);
 
@@ -170,103 +170,37 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    auto lastTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    GLfloat deltaTime = (currentTime - lastTime).count() / 150000.0f;
-
-    Paddle playerPaddle({0.0f, -0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
-    Paddle otherPaddle({0.0f, 0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
-
-    Ball ball(shaderProgram, {0, 0}, {0, 1}, 0.01, 0.00011f);
+    Pong pong(window);
 
     glUseProgram(shaderProgram);
 
     while (!glfwWindowShouldClose(window))
     {
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (currentGameState == GameState::RUNNING)
-        {
-            lastTime = currentTime;
-            currentTime = std::chrono::high_resolution_clock::now();
-            deltaTime = (currentTime - lastTime).count() / 150000.0f;
+            pong.Render();
+            pong.GameLoop();
+            pong.PlayerInput();
 
-            // renderGame();
+        // else if (currentGameState == GameState::START)
+        // {
+        //     renderStartScreen();
+        // }
+        // else if (currentGameState == GameState::PAUSED)
+        // {
+        //     // renderPauseScreen();
+        //     // playerPaddle.render();
+        //     // otherPaddle.render();
+        //     // ball.render();
+        //     pong.Render();
+        //     // text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
+        //     // text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
 
-            playerPaddle.render();
-            otherPaddle.render();
-            ball.render();
 
-            ball.bounceOffWall();
+        // }
 
-            ball.CheckCollisionAndBounce(playerPaddle);
-            ball.CheckCollisionAndBounce(otherPaddle);
 
-            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // move playerbar
-                playerPaddle.Move(-1, deltaTime);
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move playerbar
-                playerPaddle.Move(1, deltaTime);
-
-            otherPaddle.FollowBall(ball, deltaTime);
-            playerPaddle.FollowBall(ball, deltaTime);
-
-            ball.Move(deltaTime);
-
-            if (ball.position.y >= 1.1)
-            {
-                playerScore++;
-                ball.ResetBall(-1);
-            }
-            if (ball.position.y <= -1.1)
-            {
-                computerScore++;
-                ball.ResetBall(1);
-            }
-            text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
-            text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
-        }
-        else if (currentGameState == GameState::START)
-        {
-            renderStartScreen();
-        }
-        else if (currentGameState == GameState::PAUSED)
-        {
-            // renderPauseScreen();
-            playerPaddle.render();
-            otherPaddle.render();
-            ball.render();
-            text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
-            text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
-            text.RenderText("Pause", -0.5f, -0.03f, 0.005f);
-
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
-            glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) // move playerbar
-        {
-            if (!enterKeyPressedOnce)
-            {
-                enterKeyPressedOnce = true;
-                switch (currentGameState)
-                {
-                case GameState::RUNNING:
-                    currentGameState = GameState::PAUSED;
-                    break;
-                case GameState::PAUSED:
-                case GameState::START:
-                    currentGameState = GameState::RUNNING;
-                    currentTime = std::chrono::high_resolution_clock::now();
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-        else
-        {
-            enterKeyPressedOnce = false;
-        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

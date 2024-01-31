@@ -17,13 +17,10 @@ public:
     GLboolean bounceOffWallOnce = true;
 
 private:
-    GLfloat ballVertices[8] = {
-        size, size,
-        -size, size,
-        size, -size,
-        -size, -size};
+
 
 public:
+    Ball(){};
     Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s);
 
     void Move(GLfloat deltaTime);

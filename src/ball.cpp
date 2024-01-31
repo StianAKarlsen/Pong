@@ -5,6 +5,12 @@
 
 Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s) : shaderProgram(shaderProgram), position(p), direction(v), size(_size), speed(s)
 {
+    GLfloat ballVertices[8] = {
+        _size, _size,
+        -_size, _size,
+        _size, -_size,
+        -_size, -_size};
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
