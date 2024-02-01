@@ -34,7 +34,7 @@ extern const char *defaultFragmentShaderSource;
 extern const char *textFragmentShaderSource;
 extern const char *imageFragmentShaderSource;
 
-extern void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID);
+extern void LoadTexture(std::string file, unsigned int size, GLuint &textureID);
 
 enum struct GameState
 {

@@ -26,6 +26,7 @@ class Pong
     GLboolean enterKeyPressedOnce = false;
     
     GLuint backgroundScreenbuffer1;
+    GLuint VAO, VBO;
     GLuint backgroundTexture;
 
 public:

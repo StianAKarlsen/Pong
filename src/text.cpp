@@ -101,11 +101,11 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
         glUniform1i(glGetUniformLocation(textShaderProgram, "textureSampler"), 0);
+        static const GLfloat pos[] = {0, 0};
+        glUniform2fv(glGetUniformLocation(textShaderProgram, "modelPos"), 1, pos);
 
         glBindVertexArray(VAO);
-        static const GLfloat pos[] = {0, 0};
 
-        glUniform2fv(glGetUniformLocation(textShaderProgram, "modelPos"), 1, pos);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 

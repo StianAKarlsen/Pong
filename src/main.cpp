@@ -13,11 +13,11 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID)
+void LoadTexture(std::string file, unsigned int size, GLuint &textureID)
 {
     int width, height, nrChannels;
-    unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
-    // unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
+    // unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -35,7 +35,7 @@ void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID)
         std::cerr << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 int main()

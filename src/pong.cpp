@@ -17,8 +17,8 @@ Pong::Pong(GLFWwindow *window) : window(window)
     glShaderSource(imageFragmentShader, 1, &imageFragmentShaderSource, nullptr);
 
     glCompileShader(defaultVertexShader);
-    glCompileShader(textFragmentShader);
     glCompileShader(defaultFragmentShader);
+    glCompileShader(textFragmentShader);
     glCompileShader(imageFragmentShader);
 
     shaderProgram = glCreateProgram();
@@ -40,14 +40,51 @@ Pong::Pong(GLFWwindow *window) : window(window)
     glDeleteShader(defaultFragmentShader);
     glDeleteShader(textFragmentShader);
 
-    LoadTexture(startImage_png, startImage_png_len, backgroundTexture);
+    glGenTextures(1, &backgroundTexture);
+    LoadTexture("resources/cat.png", startImage_png_len, backgroundTexture);
 
-    glUseProgram(imageShaderProgram);
+
+// GLfloat fullscreenVertices[4][4] = {
+//     // x,    y,    texture x, texture y
+//     { -1.0f,  1.0f, 1.0f, 1.0f }, // Top-left becomes top-right
+//     {  1.0f,  1.0f, 1.0f, 0.0f }, // Top-right becomes bottom-right
+//     { -1.0f, -1.0f, 0.0f, 1.0f }, // Bottom-left becomes top-left
+//     {  1.0f, -1.0f, 0.0f, 0.0f }  // Bottom-right becomes bottom-left
+// };
+
+
+// GLfloat fullscreenVertices[4][4] = {
+//     // x, y, texture x, texture y
+//     {  -1.0f,  1.0f, 1.0f, 1.0f }, // Top-left
+//     {  1.0f,  1.0f, 0.0f, 0.0f }, // Top-right
+//     { -1.0f, -1.0f, 0.0f, 1.0f }, // Bottom-left
+//     {  1.0f, -1.0f, 1.0f, 0.0f }  // Bottom-right
+// };
+
+GLfloat fullscreenVertices[4][4] = {
+    // x,    y,    texture x, texture y
+    { -1.0f, -1.0f, 0.0f, 1.0f }, // Bottom-left
+    { -1.0f,  1.0f, 0.0f, 0.0f }, // Top-left
+    {  1.0f, -1.0f, 1.0f, 1.0f }, // Bottom-right
+    {  1.0f,  1.0f, 1.0f, 0.0f }  // Top-right
+};
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(fullscreenVertices), fullscreenVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const void*)(2 * sizeof(GLfloat)));
+    // glUseProgram(imageShaderProgram);
 
     // glBindFramebuffer(GL_FRAMEBUFFER, backgroundScreenbuffer1);
-    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    // glBindTexture(GL_TEXTURE_2D, backgroundTexture);
     // glViewport(0, 0, 800, 600);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glBindTexture(GL_TEXTURE_2D, 0);
 
     text = Text(textShaderProgram);
@@ -65,11 +102,15 @@ Pong::Pong(GLFWwindow *window) : window(window)
 void Pong::RenderFullScreenImage()
 {
     glUseProgram(imageShaderProgram);
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, backgroundTexture);
     glUniform1i(glGetUniformLocation(imageShaderProgram, "screenTexture"), 0);
     static const GLfloat pos[] = {0, 0};
     glUniform2fv(glGetUniformLocation(imageShaderProgram, "modelPos"), 1, pos);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     // glBindFramebuffer(GL_FRAMEBUFFER, backgroundScreenbuffer1);
     // glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
     // glClear(GL_COLOR_BUFFER_BIT);
@@ -171,6 +212,9 @@ Pong::~Pong()
 
     glDeleteTextures(1, &backgroundTexture);
     glDeleteFramebuffers(1, &backgroundScreenbuffer1);
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 
     glDeleteProgram(shaderProgram);
     glDeleteProgram(textShaderProgram);
