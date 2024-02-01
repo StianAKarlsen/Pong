@@ -15,7 +15,7 @@ public:
 
     Paddle() {};
     Paddle(Vec2 p, GLfloat h, GLfloat w, GLfloat s, GLint shaderProgram);
-
+    void CleanUp();
     void Move(int xDir, GLfloat deltaTime);
     void FollowBall(Ball &ballm, GLfloat deltaTime);
     void render();

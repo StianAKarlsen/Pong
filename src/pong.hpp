@@ -8,10 +8,12 @@
 class Pong
 {
     Ball ball;
-    Paddle player, other;
+    Paddle playerPaddle, otherPaddle;
     GLuint startTexture;
     GLuint computerScore = 0, playerScore = 0;
     
+    GLuint textShaderProgram, shaderProgram, imageShaderProgram;
+
     GameState currentGameState = GameState::START;
     
     Text text;
@@ -22,10 +24,15 @@ class Pong
     GLfloat deltaTime;
 
     GLboolean enterKeyPressedOnce = false;
+    
+    // GLuint backgroundScreenbuffer1;
+    GLuint backgroundTexture;
 
 public:
     Pong(GLFWwindow *window);
-    
+    ~Pong();
+
+    void RenderFullScreenImage();
     void GameLoop();
     void PlayerInput();
     void Render();

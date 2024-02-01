@@ -20,8 +20,8 @@
 extern unsigned char bounceSound_wav[];
 extern unsigned int bounceSound_wav_len;
 
-extern unsigned char backgroundImage_png[];
-extern unsigned int backgroundImage_png_len;
+// extern unsigned char backgroundImage_png[];
+// extern unsigned int backgroundImage_png_len;
 
 // extern unsigned char pauseImage_png[];
 // extern unsigned int pauseImage_png_len;
@@ -32,11 +32,9 @@ extern unsigned int startImage_png_len;
 extern const char *vertexShaderSource;
 extern const char *fragmentShaderSource;
 extern const char *textFragmentShaderSource;
+extern const char *imageFragmentShaderSource;
 
-
-#define TOTAL_VAO 4
-#define TOTAL_VBO 4
-#define TOTAL_TEXTURES 3
+void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID);
 
 enum struct GameState
 {

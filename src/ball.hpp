@@ -22,7 +22,7 @@ private:
 public:
     Ball(){};
     Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s);
-
+    void CleanUp();
     void Move(GLfloat deltaTime);
 
     void CheckCollisionAndBounce(Paddle &paddle);

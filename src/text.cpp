@@ -17,7 +17,7 @@ Text::Text(GLuint shaderProgram) : textShaderProgram(shaderProgram)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    
+
     LoadCharacterTextures();
 };
 
@@ -68,7 +68,7 @@ void Text::LoadCharacterTextures()
             {(int)face->glyph->bitmap.width, (int)face->glyph->bitmap.rows},
             {face->glyph->bitmap_left, face->glyph->bitmap_top},
             static_cast<GLuint>(face->glyph->advance.x)};
-        Characters.insert(std::pair<GLchar, Character>(c, character));
+        characters.insert(std::pair<GLchar, Character>(c, character));
     }
 }
 
@@ -80,7 +80,7 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
     std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); c++)
     {
-        Character ch = Characters[*c];
+        Character ch = characters[*c];
 
         GLfloat xpos = x + ch.Bearing.x * scale;
         GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
@@ -104,7 +104,6 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
         glUniform1i(glGetUniformLocation(textShaderProgram, "textureSampler"), 0);
-        // glUniform1i(glGetUniformLocation(textShaderProgram, "textureSampler"), 0);
 
         glBindVertexArray(VAO);
         static const GLfloat pos[] = {0, 0};
@@ -123,4 +122,10 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Text::CleanUp()
+{
+    for (auto c : characters)
+        glDeleteTextures(1, &c.second.TextureID);
 }

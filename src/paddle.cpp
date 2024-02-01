@@ -20,6 +20,12 @@ Paddle::Paddle(Vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderPro
     glEnableVertexAttribArray(0);
 }
 
+void Paddle::CleanUp()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+}
+
 void Paddle::Move(int xDir, GLfloat deltaTime)
 {
     position.x += xDir * speed * deltaTime;
@@ -39,7 +45,7 @@ void Paddle::render()
 
     glBindVertexArray(VAO);
     // glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
+    // glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
     glUniform2fv(0, 1, (const GLfloat *)&position);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

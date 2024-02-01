@@ -21,6 +21,12 @@ Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s) : shad
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
 }
 
+void Ball::CleanUp()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+}
+
 void Ball::Move(GLfloat deltaTime)
 {
     position.x += speed * direction.x * deltaTime;
