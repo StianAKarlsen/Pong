@@ -4,23 +4,22 @@
 
 Pong::Pong(GLFWwindow *window) : window(window)
 {
-    // glGenFramebuffers(1, &backgroundScreenbuffer1);
+    glGenFramebuffers(1, &backgroundScreenbuffer1);
 
     GLuint defaultVertexShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint defaultFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     GLuint textFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    GLuint imageFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
     glShaderSource(defaultVertexShader, 1, &defaultVertexShaderSource, nullptr);
     glShaderSource(textFragmentShader, 1, &textFragmentShaderSource, nullptr);
     glShaderSource(defaultFragmentShader, 1, &defaultFragmentShaderSource, nullptr);
+    glShaderSource(imageFragmentShader, 1, &imageFragmentShaderSource, nullptr);
 
     glCompileShader(defaultVertexShader);
     glCompileShader(textFragmentShader);
     glCompileShader(defaultFragmentShader);
-
-    // GLuint imageFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    // glShaderSource(imageFragmentShader, 1, &imageFragmentShaderSource, nullptr);
-    // glCompileShader(imageFragmentShader);
+    glCompileShader(imageFragmentShader);
 
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, defaultVertexShader);
@@ -32,24 +31,25 @@ Pong::Pong(GLFWwindow *window) : window(window)
     glAttachShader(textShaderProgram, textFragmentShader);
     glLinkProgram(textShaderProgram);
 
-    // imageShaderProgram = glCreateProgram();
-    // glAttachShader(imageShaderProgram, vertexShader);
-    // glAttachShader(imageShaderProgram, imageFragmentShader);
-    // glLinkProgram(imageShaderProgram);
+    imageShaderProgram = glCreateProgram();
+    glAttachShader(imageShaderProgram, defaultVertexShader);
+    glAttachShader(imageShaderProgram, imageFragmentShader);
+    glLinkProgram(imageShaderProgram);
 
     glDeleteShader(defaultVertexShader);
     glDeleteShader(defaultFragmentShader);
     glDeleteShader(textFragmentShader);
 
-    // LoadTexture(startImage_png, startImage_png_len, backgroundTexture);
+    LoadTexture(startImage_png, startImage_png_len, backgroundTexture);
+
+    glUseProgram(imageShaderProgram);
 
     // glBindFramebuffer(GL_FRAMEBUFFER, backgroundScreenbuffer1);
-    // glUseProgram(imageShaderProgram);
-    // glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-    // // glViewport(0, 0, 800, 600);
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    // glViewport(0, 0, 800, 600);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glBindTexture(GL_TEXTURE_2D, 0);
-    
+
     text = Text(textShaderProgram);
 
     playerPaddle = Paddle({0.0f, -0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
@@ -64,7 +64,17 @@ Pong::Pong(GLFWwindow *window) : window(window)
 
 void Pong::RenderFullScreenImage()
 {
-
+    glUseProgram(imageShaderProgram);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    glUniform1i(glGetUniformLocation(imageShaderProgram, "screenTexture"), 0);
+    static const GLfloat pos[] = {0, 0};
+    glUniform2fv(glGetUniformLocation(imageShaderProgram, "modelPos"), 1, pos);
+    // glBindFramebuffer(GL_FRAMEBUFFER, backgroundScreenbuffer1);
+    // glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glDrawArrays(GL_TRIANGLES, 0, 0);
 }
 
 void Pong::GameLoop()
@@ -101,8 +111,9 @@ void Pong::Render()
 {
     if (currentGameState == GameState::START)
     {
+        RenderFullScreenImage();
         text.RenderText("Enter to", -0.3f, -0.03f, 0.0008f);
-        text.RenderText("StaRT", -0.25f, -0.1f, 0.0008f);
+        // text.RenderText("StaRT", -0.25f, -0.1f, 0.0008f);
         return;
     }
 
@@ -157,8 +168,11 @@ Pong::~Pong()
     otherPaddle.CleanUp();
     ball.CleanUp();
     text.CleanUp();
-    // glDeleteFramebuffers(1,&backgroundScreenbuffer1);
+
+    glDeleteTextures(1, &backgroundTexture);
+    glDeleteFramebuffers(1, &backgroundScreenbuffer1);
+
     glDeleteProgram(shaderProgram);
     glDeleteProgram(textShaderProgram);
-    // glDeleteProgram(imageShaderProgram);
+    glDeleteProgram(imageShaderProgram);
 }

@@ -15,7 +15,6 @@ Text::Text(GLuint _shaderProgram) : textShaderProgram(_shaderProgram)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
 
-
     LoadCharacterTextures();
 };
 
@@ -120,11 +119,13 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
     }
     // glBindVertexArray(0);
     // glBindTexture(GL_TEXTURE_2D, 0);
-        // glActiveTexture(0);
+    // glActiveTexture(0);
 }
 
 void Text::CleanUp()
 {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
     for (auto c : characters)
         glDeleteTextures(1, &c.second.TextureID);
 }

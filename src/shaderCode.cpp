@@ -21,11 +21,8 @@ objectPosition = position;
 
 const char *defaultFragmentShaderSource = R"glsl(
 #version 330 core
-const char *defaultFragmentShaderSource = R"glsl(
-#version 330 core
 
 in vec2 objectPosition;
-in vec2 texCoords;
 in vec2 texCoords;
 
 out vec4 fragmentColor;
@@ -51,16 +48,21 @@ fragmentColor = vec4(1.0, 1.0, 1.0, afragmentColor.r);
 }
 )glsl";
 
-/// background/framebuffer/fullscreen image
+// background/framebuffer/fullscreen image
 const char *imageFragmentShaderSource = R"glsl(
 #version 330 core
 
-out vec4 FragColor;
+in vec2 objectPosition;
+in vec2 texCoords;
 
 uniform sampler2D screenTexture;
 
+out vec4 fragmentColor;
+
+
 void main() {
 vec2 normalizedCoords = gl_FragCoord.xy / vec2(gl_FramebufferWidth, gl_FramebufferHeight);
-FragColor = texture(screenTexture, normalizedCoords);
+fragmentColor = texture(screenTexture, normalizedCoords);
+fragmentColor = vec4(1.0, 0.0, 1.0, 1.0);
 }
 )glsl";

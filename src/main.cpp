@@ -13,31 +13,30 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID)
+{
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
+    // unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
 
-// void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID)
-// {
-//     int width, height, nrChannels;
-//     unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
-//     // unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
-//     glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-//     if (data)
-//     {
-//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-//         glGenerateMipmap(GL_TEXTURE_2D);
-//     }
-//     else
-//     {
-//         std::cerr << "Failed to load texture" << std::endl;
-//     }
-//     stbi_image_free(data);
-//     glBindTexture(GL_TEXTURE_2D, 0);
-// }
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 int main()
 {
@@ -65,13 +64,13 @@ int main()
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     // glEnable(GL_DEPTH_TEST);
     // glPolygonMode(GL_BACK, GL_FILL);
+    glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
 
     {
         Pong pong(window);
 
         while (!glfwWindowShouldClose(window))
         {
-            glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
             pong.Render();
