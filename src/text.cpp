@@ -2,7 +2,7 @@
 
 #include "text.hpp"
 
-Text::Text(GLuint shaderProgram) : textShaderProgram(shaderProgram)
+Text::Text(GLuint _shaderProgram) : textShaderProgram(_shaderProgram)
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -15,8 +15,6 @@ Text::Text(GLuint shaderProgram) : textShaderProgram(shaderProgram)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 
     LoadCharacterTextures();
 };
@@ -108,7 +106,7 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         glBindVertexArray(VAO);
         static const GLfloat pos[] = {0, 0};
 
-        glUniform2fv(0, 1, pos);
+        glUniform2fv(glGetUniformLocation(textShaderProgram, "modelPos"), 1, pos);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -120,8 +118,9 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         // Now advance cursors for next glyph
         x += (ch.Advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
     }
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // glBindVertexArray(0);
+    // glBindTexture(GL_TEXTURE_2D, 0);
+        // glActiveTexture(0);
 }
 
 void Text::CleanUp()

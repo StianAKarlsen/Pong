@@ -12,7 +12,7 @@ class Pong
     GLuint startTexture;
     GLuint computerScore = 0, playerScore = 0;
     
-    GLuint textShaderProgram, shaderProgram, imageShaderProgram;
+    GLuint textShaderProgram, shaderProgram;//, imageShaderProgram;
 
     GameState currentGameState = GameState::START;
     

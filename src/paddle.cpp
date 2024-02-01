@@ -46,6 +46,6 @@ void Paddle::render()
     glBindVertexArray(VAO);
     // glBindTexture(GL_TEXTURE_2D, textures[0]);
     // glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
-    glUniform2fv(0, 1, (const GLfloat *)&position);
+    glUniform2fv(glGetUniformLocation(shaderProgram, "modelPos"), 1, (const GLfloat *)&position);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

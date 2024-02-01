@@ -29,12 +29,12 @@ extern unsigned int bounceSound_wav_len;
 extern unsigned char startImage_png[];
 extern unsigned int startImage_png_len;
 
-extern const char *vertexShaderSource;
-extern const char *fragmentShaderSource;
+extern const char *defaultVertexShaderSource;
+extern const char *defaultFragmentShaderSource;
 extern const char *textFragmentShaderSource;
-extern const char *imageFragmentShaderSource;
+// extern const char *imageFragmentShaderSource;
 
-void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID);
+extern void LoadTexture(unsigned char *image, unsigned int size, GLuint textureID);
 
 enum struct GameState
 {
