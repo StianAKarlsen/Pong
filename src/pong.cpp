@@ -41,25 +41,8 @@ Pong::Pong(GLFWwindow *window) : window(window)
     glDeleteShader(textFragmentShader);
 
     glGenTextures(1, &backgroundTexture);
-    LoadTexture("resources/cat.png", startImage_png_len, backgroundTexture);
-
-
-// GLfloat fullscreenVertices[4][4] = {
-//     // x,    y,    texture x, texture y
-//     { -1.0f,  1.0f, 1.0f, 1.0f }, // Top-left becomes top-right
-//     {  1.0f,  1.0f, 1.0f, 0.0f }, // Top-right becomes bottom-right
-//     { -1.0f, -1.0f, 0.0f, 1.0f }, // Bottom-left becomes top-left
-//     {  1.0f, -1.0f, 0.0f, 0.0f }  // Bottom-right becomes bottom-left
-// };
-
-
-// GLfloat fullscreenVertices[4][4] = {
-//     // x, y, texture x, texture y
-//     {  -1.0f,  1.0f, 1.0f, 1.0f }, // Top-left
-//     {  1.0f,  1.0f, 0.0f, 0.0f }, // Top-right
-//     { -1.0f, -1.0f, 0.0f, 1.0f }, // Bottom-left
-//     {  1.0f, -1.0f, 1.0f, 0.0f }  // Bottom-right
-// };
+    
+    LoadTexture("resources/StartScreenBG.png", backgroundTexture);
 
 GLfloat fullscreenVertices[4][4] = {
     // x,    y,    texture x, texture y
