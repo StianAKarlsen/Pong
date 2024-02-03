@@ -3,8 +3,10 @@
 #include "paddle.hpp"
 #include "ball.hpp"
 
-Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s) : shaderProgram(shaderProgram), position(p), direction(v), size(_size), speed(s)
+Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s)
+    : shaderProgram(shaderProgram), position(p), direction(v), size(_size), speed(s)
 {
+
     GLfloat ballVertices[8] = {
         _size, _size,
         -_size, _size,
@@ -40,12 +42,17 @@ void Ball::CheckCollisionAndBounce(Paddle &paddle)
         position.y + size >= paddle.position.y - paddle.height &&
         position.y - size <= paddle.position.y + paddle.height)
     {
+
         if (bounceOnce)
         {
-            PlaySound((LPCSTR)bounceSound_wav, NULL, SND_MEMORY | SND_ASYNC);
-            // PlaySound(TEXT("bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
+            // PlaySound((LPCSTR)bounceSound_wav, NULL, SND_MEMORY | SND_ASYNC);
+            PlaySound(TEXT("bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
             // MessageBeep(MB_ICONWARNING);
             BounceBall(paddle);
+            if (direction.y < 0)
+                position.y = paddle.position.y - paddle.height - size;
+            if (direction.y > 0)
+                position.y = paddle.position.y + paddle.height + size;
             bounceOnce = false;
         }
     }

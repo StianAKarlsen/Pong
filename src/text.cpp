@@ -69,12 +69,18 @@ void Text::LoadCharacterTextures()
     }
 }
 
+
 void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
 {
-    // Activate corresponding render state
-    // ... (set up shaders, uniforms, etc.)
-
+    GLfloat textWidth = 0.0f;
     std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        Character ch = characters[*c];
+        textWidth += (ch.Advance >> 6) * scale;
+    }
+    x -= textWidth/2.0f;
+
     for (c = text.begin(); c != text.end(); c++)
     {
         Character ch = characters[*c];
@@ -105,7 +111,6 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         glUniform2fv(glGetUniformLocation(textShaderProgram, "modelPos"), 1, pos);
 
         glBindVertexArray(VAO);
-
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 

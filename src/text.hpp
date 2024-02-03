@@ -17,6 +17,7 @@ public:
     Text(GLuint shaderProgram);
 
     void LoadCharacterTextures();
+    void RenderTextCenterBottom(std::string text, GLfloat x, GLfloat y, GLfloat scale);
     void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale);
     void CleanUp();
 };

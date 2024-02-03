@@ -27,13 +27,14 @@ class Pong
     
     GLuint backgroundScreenbuffer1;
     GLuint VAO, VBO;
-    GLuint backgroundTexture;
+    GLuint backgroundBGTexture;
+    GLuint backgroundFGTexture;
 
 public:
     Pong(GLFWwindow *window);
     ~Pong();
 
-    void RenderFullScreenImage();
+    void RenderFullScreenImage(GLuint textureID);
     void GameLoop();
     void PlayerInput();
     void Render();
