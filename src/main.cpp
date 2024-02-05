@@ -4,9 +4,12 @@
 // #include "ball.hpp"
 // #include "text.hpp"
 #include "pong.hpp"
+#include "ShaderProgramManager.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+ShaderProgramManager g_shaderProgramManager;
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -71,6 +74,7 @@ int main()
 
         while (!glfwWindowShouldClose(window))
         {
+            
             glClear(GL_COLOR_BUFFER_BIT);
 
             pong.Render();
@@ -79,6 +83,8 @@ int main()
 
             glfwSwapBuffers(window);
             glfwPollEvents();
+
+            // g_shaderProgramManager.reloadShadersIfNeeded();
         }
     }
 

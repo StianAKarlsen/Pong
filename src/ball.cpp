@@ -46,7 +46,7 @@ void Ball::CheckCollisionAndBounce(Paddle &paddle)
         if (bounceOnce)
         {
             // PlaySound((LPCSTR)bounceSound_wav, NULL, SND_MEMORY | SND_ASYNC);
-            PlaySound(TEXT("bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
+            PlaySound(TEXT("resources/bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
             // MessageBeep(MB_ICONWARNING);
             BounceBall(paddle);
             if (direction.y < 0)

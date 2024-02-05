@@ -1,43 +1,66 @@
 #include "defines.hpp"
 
 #include "pong.hpp"
+#include "ShaderProgramManager.hpp"
 
 Pong::Pong(GLFWwindow *window) : window(window)
 {
-  GLuint defaultVertexShader = glCreateShader(GL_VERTEX_SHADER);
-  GLuint defaultFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  GLuint textFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  GLuint imageFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  // std::string path;
+  // GLenum type;
+  // time_t lastModified = 0;
 
-  glShaderSource(defaultVertexShader, 1, &defaultVertexShaderSource, nullptr);
-  glShaderSource(textFragmentShader, 1, &textFragmentShaderSource, nullptr);
-  glShaderSource(defaultFragmentShader, 1, &defaultFragmentShaderSource, nullptr);
-  glShaderSource(imageFragmentShader, 1, &imageFragmentShaderSource, nullptr);
+  ShaderFile defaultVertexShader1{"resources/shaders/defaultVertexShader.glsl", GL_VERTEX_SHADER};
 
-  glCompileShader(defaultVertexShader);
-  glCompileShader(defaultFragmentShader);
-  glCompileShader(textFragmentShader);
-  glCompileShader(imageFragmentShader);
+  std::vector<ShaderFile> defaultShaderProgramShaderList{
+      defaultVertexShader1,
+      {"resources/shaders/defaultFragmentShader.glsl", GL_FRAGMENT_SHADER}};
 
-  shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, defaultVertexShader);
-  glAttachShader(shaderProgram, defaultFragmentShader);
-  glLinkProgram(shaderProgram);
+  std::vector<ShaderFile> textShaderProgramShaderList{
+      defaultVertexShader1,
+      {"resources/shaders/textFragmentShader.glsl", GL_FRAGMENT_SHADER}};
 
-  textShaderProgram = glCreateProgram();
-  glAttachShader(textShaderProgram, defaultVertexShader);
-  glAttachShader(textShaderProgram, textFragmentShader);
-  glLinkProgram(textShaderProgram);
+  std::vector<ShaderFile> imageShaderProgramShaderList{
+      defaultVertexShader1,
+      {"resources/shaders/imageFragmentShader.glsl", GL_FRAGMENT_SHADER}};
 
-  imageShaderProgram = glCreateProgram();
-  glAttachShader(imageShaderProgram, defaultVertexShader);
-  glAttachShader(imageShaderProgram, imageFragmentShader);
-  glLinkProgram(imageShaderProgram);
+  textShaderProgram = g_shaderProgramManager.registerShaderProgram(textShaderProgramShaderList);
+  shaderProgram = g_shaderProgramManager.registerShaderProgram(defaultShaderProgramShaderList);
+  imageShaderProgram = g_shaderProgramManager.registerShaderProgram(imageShaderProgramShaderList);
 
-  glDeleteShader(defaultVertexShader);
-  glDeleteShader(defaultFragmentShader);
-  glDeleteShader(textFragmentShader);
-  glDeleteShader(imageFragmentShader);
+  // GLuint defaultVertexShader = glCreateShader(GL_VERTEX_SHADER);
+  // GLuint defaultFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  // GLuint textFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  // GLuint imageFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+  // glShaderSource(defaultVertexShader, 1, &defaultVertexShaderSource, nullptr);
+  // glShaderSource(textFragmentShader, 1, &textFragmentShaderSource, nullptr);
+  // glShaderSource(defaultFragmentShader, 1, &defaultFragmentShaderSource, nullptr);
+  // glShaderSource(imageFragmentShader, 1, &imageFragmentShaderSource, nullptr);
+
+  // glCompileShader(defaultVertexShader);
+  // glCompileShader(defaultFragmentShader);
+  // glCompileShader(textFragmentShader);
+  // glCompileShader(imageFragmentShader);
+
+  // shaderProgram = glCreateProgram();
+  // glAttachShader(shaderProgram, defaultVertexShader);
+  // glAttachShader(shaderProgram, defaultFragmentShader);
+  // glLinkProgram(shaderProgram);
+
+  // textShaderProgram = glCreateProgram();
+  // glAttachShader(textShaderProgram, defaultVertexShader);
+  // glAttachShader(textShaderProgram, textFragmentShader);
+  // glLinkProgram(textShaderProgram);
+
+  // imageShaderProgram = glCreateProgram();
+  // glAttachShader(imageShaderProgram, defaultVertexShader);
+  // glAttachShader(imageShaderProgram, imageFragmentShader);
+  // glLinkProgram(imageShaderProgram);
+
+  // glDeleteShader(defaultVertexShader);
+  // glDeleteShader(defaultFragmentShader);
+  // glDeleteShader(textFragmentShader);
+  // glDeleteShader(imageFragmentShader);
 
   glGenTextures(1, &backgroundBGTexture);
   glGenTextures(1, &backgroundFGTexture);
@@ -100,7 +123,7 @@ void Pong::RenderFullScreenImage(GLuint textureID)
 
 void Pong::GameLoop()
 {
-  lastTime = currentTime;
+lastTime = currentTime;
   currentTime = std::chrono::high_resolution_clock::now();
   deltaTime = (currentTime - lastTime).count() / 150000.0f;
 
@@ -206,7 +229,7 @@ Pong::~Pong()
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
 
-  glDeleteProgram(shaderProgram);
-  glDeleteProgram(textShaderProgram);
-  glDeleteProgram(imageShaderProgram);
+  // glDeleteProgram(shaderProgram);
+  // glDeleteProgram(textShaderProgram);
+  // glDeleteProgram(imageShaderProgram);
 }

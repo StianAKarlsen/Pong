@@ -32,7 +32,7 @@ fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 )glsl";
 
-const char *textFragmentShaderSource = R"glsl(
+ const char *textFragmentShaderSource = R"glsl(
 #version 330 core
 
 in vec2 objectPosition;
@@ -46,9 +46,9 @@ void main() {
 vec4 afragmentColor = texture(textureSampler, texCoords); // Or any other color
 fragmentColor = vec4(1.0, 1.0, 1.0, afragmentColor.r);
 }
-)glsl";
+)glsl"; 
 
-// background/framebuffer/fullscreen image
+ // background/framebuffer/fullscreen image
 const char *imageFragmentShaderSource = R"glsl(
 #version 330 core
 
@@ -66,4 +66,4 @@ void main() {
 fragmentColor = texture(screenTexture, texCoords);
 // fragmentColor = vec4(1.0, 0.0, 1.0, 1.0);
 }
-)glsl";
+)glsl"; 

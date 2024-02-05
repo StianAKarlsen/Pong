@@ -29,12 +29,15 @@ extern unsigned int bounceSound_wav_len;
 // extern unsigned char startImage_png[];
 // extern unsigned int startImage_png_len;
 
-extern const char *defaultVertexShaderSource;
-extern const char *defaultFragmentShaderSource;
-extern const char *textFragmentShaderSource;
-extern const char *imageFragmentShaderSource;
+// extern const char *defaultVertexShaderSource;
+// extern const char *defaultFragmentShaderSource;
+// extern const char *textFragmentShaderSource;
+// extern const char *imageFragmentShaderSource;
 
 extern void LoadTexture(std::string file, GLuint &textureID);
+
+class ShaderProgramManager;
+extern ShaderProgramManager g_shaderProgramManager;
 
 enum struct GameState
 {
