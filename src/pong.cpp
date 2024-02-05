@@ -123,7 +123,7 @@ void Pong::RenderFullScreenImage(GLuint textureID)
 
 void Pong::GameLoop()
 {
-lastTime = currentTime;
+  lastTime = currentTime;
   currentTime = std::chrono::high_resolution_clock::now();
   deltaTime = (currentTime - lastTime).count() / 150000.0f;
 
@@ -131,6 +131,7 @@ lastTime = currentTime;
     playerPaddle.FollowBall(ball, deltaTime);
   if (currentGameState != GameState::PAUSED)
   {
+
     otherPaddle.FollowBall(ball, deltaTime);
 
     if (ball.position.y >= 1.1)
@@ -198,6 +199,8 @@ void Pong::PlayerInput()
         currentGameState = GameState::PAUSED;
         break;
       case GameState::PAUSED:
+        currentGameState = GameState::RUNNING;
+        break;
       case GameState::START:
         currentGameState = GameState::RUNNING;
         otherPaddle.position.x = 0;
