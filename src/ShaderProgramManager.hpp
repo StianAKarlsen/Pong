@@ -3,64 +3,56 @@
 #ifndef _SHADERMANAGER_HPP_
 #define _SHADERMANAGER_HPP_
 
+#include "defines.hpp"
+
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
-#include <GL/glew.h>
+#include <functional>
+#include <filesystem>
 
-// Represents a single shader file.
-struct ShaderFile {
-    std::string path;
-    GLenum type;
-    time_t lastModified = 0;
-};
-
-// Represents a shader program consisting of multiple shaders.
-struct ShaderProgram {
-    GLuint programID;
-    std::vector<ShaderFile> shaders;
-    std::unordered_map<GLenum, GLuint> shaderIDs; // Maps shader types to shader object IDs
-};
-
-class ShaderProgramManager {
+class ShaderManager {
 public:
-    ShaderProgramManager();
-    ~ShaderProgramManager();
+    static ShaderManager& getInstance() {
+        static ShaderManager instance;
+        return instance;
+    }
 
-    ShaderProgramManager(const ShaderProgramManager&) = delete;
-    ShaderProgramManager& operator=(const ShaderProgramManager&) = delete;
-
-    // Registers a shader program with the given shaders. og returner programid eller 0 neo noe feil compilert(se error log/console), eller ingen endring i filene/programmet.
-    GLuint registerShaderProgram(const std::vector<ShaderFile>& shaders);
-
-    // Use a specific shader program.
-    void useProgram(GLuint programID);
-
-    // Checks for updates in any shader files and reloads them if necessary.
-    void reloadShadersIfNeeded();
+    std::shared_ptr<ShaderProgram> getShaderProgram(const std::map<GLenum, std::string>& shaders);
 
 private:
-    std::unordered_map<GLuint, ShaderProgram> shaderPrograms;
+    ShaderManager() {} // Constructor is private for Singleton pattern
+    ShaderManager(const ShaderManager&) = delete;
+    ShaderManager& operator=(const ShaderManager&) = delete;
 
-    std::chrono::time_point<std::chrono::steady_clock> currentTime, lastTime;
-    std::chrono::seconds refreshRate;
-    // Compiles a shader from source, returns shader ID.
-    GLuint compileShader(const std::string& shaderPath, GLenum shaderType);
+    std::map<std::string, std::shared_ptr<ShaderProgram>> shaderCache;
+    std::string generateKey(const std::map<GLenum, std::string>& shaders);
+};
 
-    // Links shaders into a program, returns program ID.
-    GLuint linkShadersIntoProgram(const std::vector<GLuint>& shaderIDs);
 
-    // Checks if the shader file has been modified.
-    bool isShaderFileModified(const ShaderFile& shaderFile);
+class ShaderProgram {
+public:
+    ShaderProgram(const std::map<GLenum, std::string>& shaders);
+    ~ShaderProgram();
 
-    // Updates the timestamp of a shader file.
-    void updateShaderFileTimestamp(ShaderFile& shaderFile);
+    void use();
+    void reload();
+    void checkAndReloadUpdatedShaders();
+    void setErrorCallback(std::function<void(const std::string&)> callback);
 
-    // Cleans up resources for a shader program.
-    void cleanupShaderProgram(GLuint programID);
+private:
+    GLuint programID;
+    std::map<GLenum, std::pair<std::string, std::filesystem::file_time_type>> shaderFiles;
+    std::vector<struct ShaderFileInfo> updateQueue;
+    std::function<void(const std::string&)> errorCallback;
 
-    // Detach and delete shaders.
-    void detachAndDeleteShaders(GLuint programID, const std::vector<GLuint>& shaderIDs);
+    GLuint loadShaderFromFile(const std::string& path, GLenum type);
+    GLuint loadShaderFromString(const std::string& source, GLenum type);
+    GLuint compileShader(const std::string& source, GLenum type);
+    void checkShaderError(GLuint shader, GLenum status, bool isProgram);
+    void reloadShader(GLenum shaderType, const std::string& shaderPath);
+    void updateLastModifiedTimes();
 };
 
 #endif // _SHADERMANAGER_HPP_
+
