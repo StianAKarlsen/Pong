@@ -187,6 +187,9 @@ void Pong::PlayerInput()
       playerPaddle.Move(1, deltaTime);
   }
 
+  if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // move playerbar
+    g_shaderProgramManager.reloadShadersIfNeeded();
+
   if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
       glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) // move playerbar
   {

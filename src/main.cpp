@@ -84,7 +84,6 @@ int main()
             glfwSwapBuffers(window);
             glfwPollEvents();
 
-            // g_shaderProgramManager.reloadShadersIfNeeded();
         }
     }
 

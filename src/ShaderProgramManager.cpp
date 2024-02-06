@@ -30,7 +30,9 @@ GLuint ShaderProgramManager::registerShaderProgram(const std::vector<ShaderFile>
 {
   std::vector<GLuint> shaderIDs;
   bool needToLink = false;
-
+  
+  std::unordered_map<GLenum, GLuint> tmpMapShaderIDs;
+  
   // Attempt to compile each shader
   for (const auto &shaderFile : shaders)
   {
@@ -40,6 +42,8 @@ GLuint ShaderProgramManager::registerShaderProgram(const std::vector<ShaderFile>
       if (shaderID != 0)
       { // Compilation success
         shaderIDs.push_back(shaderID);
+        tmpMapShaderIDs[shaderFile.type] = shaderID;
+
         needToLink = true;
       }
       else
@@ -55,13 +59,14 @@ GLuint ShaderProgramManager::registerShaderProgram(const std::vector<ShaderFile>
     GLuint programID = linkShadersIntoProgram(shaderIDs);
     if (programID != 0)
     {
+
       // If linking succeeded, update program map and clean up
-      ShaderProgram program = {programID, shaders};
-      shaderPrograms[programID] = program;
+      ShaderProgram program = {programID, shaders, tmpMapShaderIDs};
       for (auto &shader : program.shaders)
       {
         updateShaderFileTimestamp(shader);
       }
+      shaderPrograms[programID] = program;
       detachAndDeleteShaders(programID, shaderIDs);
       return programID;
     }
@@ -81,19 +86,69 @@ void ShaderProgramManager::useProgram(GLuint programID)
   // }
 }
 
+// void tead = []()
+// {
+//       for (auto &entry : shaderPrograms)
+//     {
+//       registerShaderProgram(entry.second.shaders);
+//     }
+// };
+
 void ShaderProgramManager::reloadShadersIfNeeded()
 {
-  // std::thread s;
+  // std::thread s(thread());
   // if(s.joinable())
   //   s.join();
   // currentTime = std::chrono::steady_clock::now();
   // auto sek = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime);
   // if (sek >= refreshRate)
-    for (auto &entry : shaderPrograms)
+
+  for (auto &[programID, program] : shaderPrograms)
+  {
+    bool programUpdated = false;
+    for (auto &shaderFile : program.shaders)
     {
-      // lastTime = currentTime;
-      registerShaderProgram(entry.second.shaders);
+      if (isShaderFileModified(shaderFile))
+      {
+        GLuint newShaderID = compileShader(shaderFile.path, shaderFile.type);
+
+        if (newShaderID != 0)
+        {
+          // Replace the old shader with the new one in the program
+          glDetachShader(programID, program.shaderIDs[shaderFile.type]);
+          glDeleteShader(program.shaderIDs[shaderFile.type]);
+          glAttachShader(programID, newShaderID);
+
+          // Update the shader ID in the program structure
+          program.shaderIDs[shaderFile.type] = newShaderID;
+          programUpdated = true;
+          updateShaderFileTimestamp(shaderFile); // Update timestamp after successful recompilation
+        }
+      }
     }
+    if (programUpdated)
+    {
+      // Relink the program if any of its shaders were updated
+      glLinkProgram(programID);
+
+      GLint success;
+      glGetProgramiv(programID, GL_LINK_STATUS, &success);
+      if (!success)
+      {
+        GLchar infoLog[512];
+        glGetProgramInfoLog(programID, 512, nullptr, infoLog);
+        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n"
+                  << infoLog << std::endl;
+        glDeleteProgram(programID); // Don't leak the program.
+      }
+    }
+  }
+
+  // for (auto &entry : shaderPrograms)
+  // {
+  //   // lastTime = currentTime;
+  //   registerShaderProgram(entry.second.shaders);
+  // }
 }
 
 GLuint ShaderProgramManager::compileShader(const std::string &shaderPath, GLenum shaderType)

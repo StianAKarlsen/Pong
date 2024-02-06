@@ -19,6 +19,7 @@ struct ShaderFile {
 struct ShaderProgram {
     GLuint programID;
     std::vector<ShaderFile> shaders;
+    std::unordered_map<GLenum, GLuint> shaderIDs; // Maps shader types to shader object IDs
 };
 
 class ShaderProgramManager {
@@ -29,7 +30,7 @@ public:
     ShaderProgramManager(const ShaderProgramManager&) = delete;
     ShaderProgramManager& operator=(const ShaderProgramManager&) = delete;
 
-    // Registers a shader program with the given shaders. og returner programid eller 0 vis den ikke kunne lage programmet..
+    // Registers a shader program with the given shaders. og returner programid eller 0 neo noe feil compilert(se error log/console), eller ingen endring i filene/programmet.
     GLuint registerShaderProgram(const std::vector<ShaderFile>& shaders);
 
     // Use a specific shader program.
