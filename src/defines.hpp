@@ -6,10 +6,20 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <algorithm>
+
+#include <functional>
+#include <filesystem>
+#include <unordered_map>
+
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 #include <iostream>
 #include <windows.h>
 #include <string>
+#include <vector>
 #include <chrono>
 #include <map>
 #include <stdio.h>
@@ -35,9 +45,11 @@ extern unsigned int bounceSound_wav_len;
 // extern const char *imageFragmentShaderSource;
 
 extern void LoadTexture(std::string file, GLuint &textureID);
+// class ShaderManager;
+// extern ShaderManager &shaderManager;;
 
-class ShaderProgramManager;
-extern ShaderProgramManager g_shaderProgramManager;
+// class ShaderProgramManager;
+// extern ShaderProgramManager g_shaderProgramManager;
 
 enum struct GameState
 {

@@ -3,6 +3,8 @@
 
 #include "defines.hpp"
 
+class ShaderProgram;
+
 class Text
 {
 private:
@@ -11,6 +13,7 @@ private:
     std::map<GLchar, Character> characters;
     GLuint  VAO, VBO;
     GLuint textShaderProgram;
+    ShaderProgram *textsp;
 
 public:
     Text() {};

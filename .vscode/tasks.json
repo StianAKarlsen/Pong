@@ -6,7 +6,7 @@
 			"label": "C/C++: g++.exe build active file",
 			"command": "C:/msys64/mingw64/bin/g++.exe",
 			"args": [
-				// "-fdiagnostics-color=always",
+				"-fdiagnostics-color=always",
 				"-g",
 				// "-O3",
                 "${workspaceRoot}/src/main.cpp",
@@ -27,7 +27,8 @@
 				"-lfreetype",
 				// "-mwindows",
 				"-o",
-				"${workspaceRoot}/bin/pong.exe"
+				"${workspaceRoot}/bin/pong.exe",
+				"-std=c++17"
 			],
 			"options": {
 				"cwd": "C:/msys64/mingw64/bin"

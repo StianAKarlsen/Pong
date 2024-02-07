@@ -1,5 +1,6 @@
 #include "defines.hpp"
 
+#include "ShaderProgramManager.hpp"
 #include "text.hpp"
 
 Text::Text(GLuint _shaderProgram) : textShaderProgram(_shaderProgram)
@@ -16,6 +17,9 @@ Text::Text(GLuint _shaderProgram) : textShaderProgram(_shaderProgram)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
 
     LoadCharacterTextures();
+    
+    auto &shaderManager = ShaderManager::getInstance();
+    textsp = shaderManager.getShaderProgram("TextShaderProgram");
 };
 
 void Text::LoadCharacterTextures()
@@ -69,7 +73,6 @@ void Text::LoadCharacterTextures()
     }
 }
 
-
 void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
 {
     GLfloat textWidth = 0.0f;
@@ -79,7 +82,7 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         Character ch = characters[*c];
         textWidth += (ch.Advance >> 6) * scale;
     }
-    x -= textWidth/2.0f;
+    x -= textWidth / 2.0f;
 
     for (c = text.begin(); c != text.end(); c++)
     {
@@ -102,7 +105,8 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
             {xpos + w, ypos + h, 1.0f, 0.0f}};
 
         // Render glyph texture over quad
-        glUseProgram(textShaderProgram);
+        // glUseProgram(textShaderProgram);
+        textsp->use();
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);

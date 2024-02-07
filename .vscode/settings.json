@@ -63,7 +63,10 @@
         "unordered_map": "cpp",
         "xhash": "cpp",
         "stop_token": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "algorithm": "cpp",
+        "filesystem": "cpp",
+        "functional": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
 

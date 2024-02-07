@@ -1,148 +1,206 @@
 #include "ShaderProgramManager.hpp"
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <algorithm>
-#include <chrono>
-#include <thread>
 
-// Helper structure for shader file information
-struct ShaderFileInfo {
-    GLenum type;
-    std::string path;
-    std::filesystem::file_time_type lastModifiedTime;
 
-    ShaderFileInfo(GLenum shaderType, const std::string& shaderPath)
-        : type(shaderType), path(shaderPath), lastModifiedTime(std::filesystem::last_write_time(shaderPath)) {}
 
-    bool operator<(const ShaderFileInfo& other) const {
-        return this->lastModifiedTime < other.lastModifiedTime;
+
+ShaderProgram::ShaderProgram(const std::map<GLenum, std::string> &shaders)
+{
+  programID = glCreateProgram();
+  for (const auto &shader : shaders)
+  {
+    auto compiledShader = loadShaderFromFile(shader.second, shader.first);
+    glAttachShader(programID, compiledShader);
+    glDeleteShader(compiledShader); // Delete shader after attaching
+  }
+  glLinkProgram(programID);
+  checkShaderError(programID, GL_LINK_STATUS, true);
+}
+
+ShaderProgram::~ShaderProgram()
+{
+  glDeleteProgram(programID);
+}
+
+GLuint ShaderProgram::use()
+{
+  glUseProgram(programID);
+  return programID;
+}
+
+void ShaderProgram::reload()
+{
+  for (auto &[type, pair] : shaderFiles)
+  {
+    auto &[path, _] = pair; // Ignore the last modified time here
+    reloadShader(type, path);
+  }
+}
+
+void ShaderProgram::checkAndReloadUpdatedShaders()
+{
+  updateLastModifiedTimes();
+  for (auto &fileInfo : updateQueue)
+  {
+    reloadShader(fileInfo.type, fileInfo.path);
+  }
+  updateQueue.clear(); // Clear the queue after reloading shaders
+}
+
+void ShaderProgram::setErrorCallback(std::function<void(const std::string &)> callback)
+{
+  errorCallback = callback;
+}
+
+GLuint ShaderProgram::loadShaderFromFile(const std::string &path, GLenum type)
+{
+  std::ifstream shaderFile(path);
+  std::stringstream shaderData;
+  shaderData << shaderFile.rdbuf();
+  shaderFile.close();
+  return compileShader(shaderData.str(), type);
+}
+
+GLuint ShaderProgram::compileShader(const std::string &source, GLenum type)
+{
+  GLuint shader = glCreateShader(type);
+  const char *src = source.c_str();
+  glShaderSource(shader, 1, &src, nullptr);
+  glCompileShader(shader);
+  checkShaderError(shader, GL_COMPILE_STATUS, false);
+  return shader;
+}
+
+void ShaderProgram::checkShaderError(GLuint shader, GLenum status, bool isProgram)
+{
+  GLint success;
+  GLchar infoLog[1024];
+  if (isProgram)
+  {
+    glGetProgramiv(shader, status, &success);
+    if (!success)
+    {
+      glGetProgramInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
+      if (errorCallback)
+        errorCallback(std::string(infoLog));
     }
-};
-
-ShaderProgram::ShaderProgram(const std::map<GLenum, std::string>& shaders) {
-    programID = glCreateProgram();
-    for (const auto& shader : shaders) {
-        auto compiledShader = loadShaderFromFile(shader.second, shader.first);
-        glAttachShader(programID, compiledShader);
-        glDeleteShader(compiledShader); // Delete shader after attaching
+  }
+  else
+  {
+    glGetShaderiv(shader, status, &success);
+    if (!success)
+    {
+      glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
+      if (errorCallback)
+        errorCallback(std::string(infoLog));
     }
-    glLinkProgram(programID);
-    checkShaderError(programID, GL_LINK_STATUS, true);
+  }
 }
 
-ShaderProgram::~ShaderProgram() {
-    glDeleteProgram(programID);
-}
+void ShaderProgram::reloadShader(GLenum shaderType, const std::string &shaderPath)
+{
+  // Create a new shader from the file
+  GLuint newShader = loadShaderFromFile(shaderPath, shaderType);
 
-void ShaderProgram::use() {
-    glUseProgram(programID);
-}
+  // Detach and delete the old shader of the same type, if it exists
+  GLint attachedShaders = 0;
+  glGetProgramiv(programID, GL_ATTACHED_SHADERS, &attachedShaders);
+  std::vector<GLuint> shaders(attachedShaders);
+  glGetAttachedShaders(programID, attachedShaders, nullptr, shaders.data());
 
-void ShaderProgram::reload() {
-    for (auto& [type, pair] : shaderFiles) {
-        auto& [path, _] = pair; // Ignore the last modified time here
-        reloadShader(type, path);
+  for (GLuint oldShader : shaders)
+  {
+    GLint type;
+    glGetShaderiv(oldShader, GL_SHADER_TYPE, &type);
+    if (type == static_cast<GLint>(shaderType))
+    {
+      glDetachShader(programID, oldShader);
+      glDeleteShader(oldShader);
+      break; // Assuming only one shader of each type is attached
     }
+  }
+
+  // Attach the new shader and re-link the program
+  glAttachShader(programID, newShader);
+  glLinkProgram(programID);
+  glDeleteShader(newShader); // Delete the new shader since it's now attached to the program
+
+  checkShaderError(programID, GL_LINK_STATUS, true);
 }
 
-void ShaderProgram::checkAndReloadUpdatedShaders() {
-    updateLastModifiedTimes();
-    for (auto& fileInfo : updateQueue) {
-        reloadShader(fileInfo.type, fileInfo.path);
+// void ShaderProgram::reloadShader(GLenum shaderType, const std::string& shaderPath) {
+//     GLuint newShader = loadShaderFromFile(shaderPath, shaderType);
+//     // Replace the old shader with the new shader in the program
+//     glAttachShader(programID, newShader);
+//     glLinkProgram(programID); // Re-link program with the new shader
+//     glDeleteShader(newShader); // Delete the new shader as it's now attached to the program
+
+//     checkShaderError(programID, GL_LINK_STATUS, true);
+// }
+
+void ShaderProgram::updateLastModifiedTimes()
+{
+  // Iterate over shaderFiles to check for updates
+  for (auto &[type, pair] : shaderFiles)
+  {
+    auto &[path, lastModifiedTime] = pair;
+    auto currentModifiedTime = std::filesystem::last_write_time(path);
+    if (currentModifiedTime > lastModifiedTime)
+    {
+      updateQueue.emplace_back(type, path);
+      lastModifiedTime = currentModifiedTime;
     }
-    updateQueue.clear(); // Clear the queue after reloading shaders
+  }
+
+  // Sort updateQueue to have the most recently modified files at the end
+  std::sort(updateQueue.begin(), updateQueue.end());
+
+  // Keep only the last 3 updated files
+  if (updateQueue.size() > 3)
+  {
+    updateQueue.erase(updateQueue.begin(), updateQueue.end() - 3);
+  }
 }
 
-void ShaderProgram::setErrorCallback(std::function<void(const std::string&)> callback) {
-    errorCallback = callback;
+//----------------------------------------------------------------------------------------------------------------------
+
+ShaderManager &ShaderManager::getInstance()
+{
+  static ShaderManager instance; // Instantiated on first use, guaranteed to be destroyed
+  return instance;
 }
 
-GLuint ShaderProgram::loadShaderFromFile(const std::string& path, GLenum type) {
-    std::ifstream shaderFile(path);
-    std::stringstream shaderData;
-    shaderData << shaderFile.rdbuf();
-    shaderFile.close();
-    return compileShader(shaderData.str(), type);
+// ShaderManager& ShaderManager::getInstance() {
+//     static ShaderManager instance; // Instantiated on first use, guaranteed to be destroyed
+//     return instance;
+// }
+
+ShaderProgram &ShaderManager::createShaderProgram(const std::string &name, const std::map<GLenum, std::string> &shaderPaths)
+{
+  // Check if a shader program with the same name already exists
+  auto it = shaderPrograms.find(name);
+  if (it != shaderPrograms.end())
+  {
+    // Optionally, handle error or update existing shader program
+    throw std::runtime_error("Shader program with the given name already exists.");
+  }
+
+  // Create and insert the shader program
+  ShaderProgram program(shaderPaths); // Assuming ShaderProgram can be constructed this way
+  shaderPrograms[name] = std::move(program);
+  return shaderPrograms[name];
 }
 
-GLuint ShaderProgram::compileShader(const std::string& source, GLenum type) {
-    GLuint shader = glCreateShader(type);
-    const char* src = source.c_str();
-    glShaderSource(shader, 1, &src, nullptr);
-    glCompileShader(shader);
-    checkShaderError(shader, GL_COMPILE_STATUS, false);
-    return shader;
+ShaderProgram *ShaderManager::getShaderProgram(const std::string &name)
+{
+  auto it = shaderPrograms.find(name);
+  if (it != shaderPrograms.end())
+  {
+    return &it->second;
+  }
+  return nullptr; // or throw an exception if preferred
 }
 
-void ShaderProgram::checkShaderError(GLuint shader, GLenum status, bool isProgram) {
-    GLint success;
-    GLchar infoLog[1024];
-    if (isProgram) {
-        glGetProgramiv(shader, status, &success);
-        if (!success) {
-            glGetProgramInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
-            if (errorCallback) errorCallback(std::string(infoLog));
-        }
-    } else {
-        glGetShaderiv(shader, status, &success);
-        if (!success) {
-            glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
-            if (errorCallback) errorCallback(std::string(infoLog));
-        }
-    }
-}
-
-void ShaderProgram::reloadShader(GLenum shaderType, const std::string& shaderPath) {
-    GLuint newShader = loadShaderFromFile(shaderPath, shaderType);
-    // Replace the old shader with the new shader in the program
-    glAttachShader(programID, newShader);
-    glLinkProgram(programID); // Re-link program with the new shader
-    glDeleteShader(newShader); // Delete the new shader as it's now attached to the program
-
-    checkShaderError(programID, GL_LINK_STATUS, true);
-}
-
-void ShaderProgram::updateLastModifiedTimes() {
-    // Iterate over shaderFiles to check for updates
-    for (auto& [type, pair] : shaderFiles) {
-        auto& [path, lastModifiedTime] = pair;
-        auto currentModifiedTime = std::filesystem::last_write_time(path);
-        if (currentModifiedTime > lastModifiedTime) {
-            updateQueue.emplace_back(type, path);
-            lastModifiedTime = currentModifiedTime;
-        }
-    }
-
-    // Sort updateQueue to have the most recently modified files at the end
-    std::sort(updateQueue.begin(), updateQueue.end());
-
-    // Keep only the last 3 updated files
-    if (updateQueue.size() > 3) {
-        updateQueue.erase(updateQueue.begin(), updateQueue.end() - 3);
-    }
-}
-
-
-
-std::shared_ptr<ShaderProgram> ShaderManager::getShaderProgram(const std::map<GLenum, std::string>& shaders) {
-    std::string key = generateKey(shaders);
-    auto it = shaderCache.find(key);
-    if (it != shaderCache.end()) {
-        // Found existing shader program, return it
-        return it->second;
-    } else {
-        // Create a new shader program, cache it, and return it
-        auto shaderProgram = std::make_shared<ShaderProgram>(shaders);
-        shaderCache[key] = shaderProgram;
-        return shaderProgram;
-    }
-}
-
-std::string ShaderManager::generateKey(const std::map<GLenum, std::string>& shaders) {
-    std::stringstream keyStream;
-    for (const auto& shader : shaders) {
-        keyStream << shader.first << ":" << shader.second << ";";
-    }
-    return keyStream.str();
+void ShaderManager::deleteShaderProgram(const std::string &name)
+{
+  shaderPrograms.erase(name);
 }

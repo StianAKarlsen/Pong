@@ -4,12 +4,11 @@
 // #include "ball.hpp"
 // #include "text.hpp"
 #include "pong.hpp"
-#include "ShaderProgramManager.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-ShaderProgramManager g_shaderProgramManager;
+//   static auto &shaderManager = ShaderManager::getInstance();
+// shaderManager.createShaderProgram("BasicShader", { {GL_VERTEX_SHADER, "path/to/vertex_shader.glsl"}, {GL_FRAGMENT_SHADER, "path/to/fragment_shader.glsl"} });
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -43,6 +42,8 @@ void LoadTexture(std::string file, GLuint &textureID)
 
 int main()
 {
+// auto &shaderManager = ShaderManager::getInstance();
+  
     if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -69,12 +70,18 @@ int main()
     // glPolygonMode(GL_BACK, GL_FILL);
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
 
+    // ShaderManager shaderManager;
+    // shaderManager.getInstance();
+
+    // std::shared_ptr<ShaderProgram> shaderProgram = shaderManager.getShaderProgram(
+    //     {{GL_VERTEX_SHADER, "path/to/vertexShader.glsl"},
+    //      {GL_FRAGMENT_SHADER, "path/to/fragmentShader.glsl"}});
     {
         Pong pong(window);
 
         while (!glfwWindowShouldClose(window))
         {
-            
+
             glClear(GL_COLOR_BUFFER_BIT);
 
             pong.Render();
@@ -83,7 +90,6 @@ int main()
 
             glfwSwapBuffers(window);
             glfwPollEvents();
-
         }
     }
 

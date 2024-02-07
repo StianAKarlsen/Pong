@@ -1,5 +1,6 @@
 #include "defines.hpp"
 
+// #include "ShaderProgramManager.hpp"
 #include "paddle.hpp"
 #include "ball.hpp"
 
@@ -21,6 +22,9 @@ Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s)
     glBufferData(GL_ARRAY_BUFFER, sizeof(ballVertices), ballVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+    auto &sm = ShaderManager::getInstance();
+    defaultsp = sm.getShaderProgram("DefaultShaderProgram");
 }
 
 void Ball::CleanUp()
@@ -99,7 +103,9 @@ void Ball::ResetBall(int dir)
 
 void Ball::render()
 {
-    glUseProgram(shaderProgram);
+    // glUseProgram(shaderProgram);
+    defaultsp->use();
+
     glBindVertexArray(VAO);
     glUniform2fv(0, 1, (const GLfloat *)&position);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

@@ -4,6 +4,7 @@
 #include "ball.hpp"
 #include "paddle.hpp"
 #include "text.hpp"
+#include "ShaderProgramManager.hpp"
 
 class Pong
 {
@@ -13,7 +14,7 @@ class Pong
     GLuint computerScore = 0, playerScore = 0;
     
     GLuint textShaderProgram, shaderProgram, imageShaderProgram;
-
+    ShaderProgram *defaultsp, *textsp, *imagesp;
     GameState currentGameState = GameState::START;
     
     Text text;

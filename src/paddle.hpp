@@ -1,18 +1,19 @@
 #ifndef _PADDLE_HPP_
 #define _PADDLE_HPP_
 
+#include "ShaderProgramManager.hpp"
 #include "ball.hpp"
 
 class Paddle
 {
     GLuint VAO, VBO;
+    ShaderProgram *defaultsp;
 
 public:
     Vec2 position; // center of paddel
     GLfloat height, width;
     GLfloat speed;
     GLint shaderProgram;
-
     Paddle() {};
     Paddle(Vec2 p, GLfloat h, GLfloat w, GLfloat s, GLint shaderProgram);
     void CleanUp();
