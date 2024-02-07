@@ -1,8 +1,5 @@
 #include "ShaderProgramManager.hpp"
 
-
-
-
 ShaderProgram::ShaderProgram(const std::map<GLenum, std::string> &shaders)
 {
   programID = glCreateProgram();
@@ -11,7 +8,13 @@ ShaderProgram::ShaderProgram(const std::map<GLenum, std::string> &shaders)
     auto compiledShader = loadShaderFromFile(shader.second, shader.first);
     glAttachShader(programID, compiledShader);
     glDeleteShader(compiledShader); // Delete shader after attaching
+
+    shaderFiles[shader.first] =
+        std::pair<std::string, std::filesystem::file_time_type>(
+            shader.second,
+            std::filesystem::last_write_time(shader.second));
   }
+  // updateLastModifiedTimes();
   glLinkProgram(programID);
   checkShaderError(programID, GL_LINK_STATUS, true);
 }
@@ -203,4 +206,10 @@ ShaderProgram *ShaderManager::getShaderProgram(const std::string &name)
 void ShaderManager::deleteShaderProgram(const std::string &name)
 {
   shaderPrograms.erase(name);
+}
+
+void ShaderManager::reloadShaderIfFileChange()
+{
+  for (auto &[_, sp] : shaderPrograms)
+    sp.reload();
 }

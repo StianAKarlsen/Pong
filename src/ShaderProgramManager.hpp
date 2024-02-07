@@ -31,6 +31,8 @@ public:
         if (this != &other) {
             glDeleteProgram(programID); // Free existing resource
             programID = other.programID; // Transfer ownership
+            shaderFiles = other.shaderFiles;
+            other.shaderFiles.clear();
             other.programID = 0; // Invalidate the old object
         }
         return *this;
@@ -76,6 +78,7 @@ public:
     ShaderProgram *getShaderProgram(const std::string &name);
     void deleteShaderProgram(const std::string &name);
 
+    void reloadShaderIfFileChange();
 private:
     // Private constructor for singleton pattern
     ShaderManager() {};

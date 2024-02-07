@@ -11,5 +11,5 @@ void main() {
     // fragmentColor = texture(screenTexture, gl_FragCoord.xy);
     // vec2 normalizedCoords = gl_FragCoord.xy / vec2(gl_FramebufferWidth, gl_FramebufferHeight);
     fragmentColor = texture(screenTexture, texCoords);
-    // fragmentColor = vec4(0.0, 0.18, 1.0, 1.0);
+    fragmentColor = fragmentColor * vec4(0.0, 0.18, 1.0, 1.0);
 }

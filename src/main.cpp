@@ -79,6 +79,7 @@ int main()
     {
         Pong pong(window);
 
+        ShaderManager &sm = ShaderManager::getInstance();
         while (!glfwWindowShouldClose(window))
         {
 
@@ -90,6 +91,8 @@ int main()
 
             glfwSwapBuffers(window);
             glfwPollEvents();
+
+            // sm.reloadShaderIfFileChange();
         }
     }
 
