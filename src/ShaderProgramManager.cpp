@@ -1,3 +1,5 @@
+// #AI + meg
+
 #include "ShaderProgramManager.hpp"
 
 ShaderProgram::ShaderProgram(const std::map<GLenum, std::string> &shaders)
@@ -17,12 +19,56 @@ ShaderProgram::ShaderProgram(const std::map<GLenum, std::string> &shaders)
   // updateLastModifiedTimes();
   glLinkProgram(programID);
   checkShaderError(programID, GL_LINK_STATUS, true);
+  cacheStructuredUniformLocationsAndTypes();
 }
 
 ShaderProgram::~ShaderProgram()
 {
   glDeleteProgram(programID);
 }
+
+void ShaderProgram::cacheStructuredUniformLocationsAndTypes()
+{
+  uniformLocations.clear();
+  GLint numUniforms = 0;
+  glGetProgramiv(programID, GL_ACTIVE_UNIFORMS, &numUniforms);
+
+  for (GLint i = 0; i < numUniforms; ++i)
+  {
+    char uniformName[256]; // Buffer for uniform name
+    GLsizei length;
+    GLint size;  // Size of the uniform variable
+    GLenum type; // Type of the uniform variable
+                 // typedef void (GLAPIENTRY * PFNGLGETACTIVEATTRIBPROC) (GLuint program, GLuint index, GLsizei maxLength, GLsizei* length, GLint* size, GLenum* type, GLchar* name);
+    glGetActiveUniform(programID, i, sizeof(uniformName), &length, &size, &type, uniformName);
+    GLint location = glGetUniformLocation(programID, std::string(uniformName).c_str());
+
+    // Here uniformName could be something like "Light.position"
+    // This stores the location of each field of the struct as well
+    uniformLocations[std::string(uniformName)] = std::pair<GLuint, GLenum>(location, type);
+  }
+}
+
+// void ShaderProgram::setUniform(const std::string &name, void *value)
+// {
+//   GLint &location = uniformLocations[name].first;
+//   GLenum &type = uniformLocations[name].second;
+
+//   switch (type)
+//   {
+//   case GL_FLOAT:
+//     glGetUniformivARB(location, *(GLfloat *)value);
+//     break;
+//   case GL_TEXTURE_2D:
+//     glBindTexture(GL_TEXTURE_2D, *(GLuint *)value);
+//     glUniform1i(location, *(GLint *)value);
+//   case GL_INT_VEC2:
+//     __glewUniform2iv(location, 1,(const GLint *)value);
+//     break;
+//   default:
+//     break;
+//   }
+// }
 
 GLuint ShaderProgram::use()
 {
@@ -47,11 +93,6 @@ void ShaderProgram::checkAndReloadUpdatedShaders()
     reloadShader(fileInfo.type, fileInfo.path);
   }
   updateQueue.clear(); // Clear the queue after reloading shaders
-}
-
-void ShaderProgram::setErrorCallback(std::function<void(const std::string &)> callback)
-{
-  errorCallback = callback;
 }
 
 GLuint ShaderProgram::loadShaderFromFile(const std::string &path, GLenum type)
@@ -83,8 +124,7 @@ void ShaderProgram::checkShaderError(GLuint shader, GLenum status, bool isProgra
     if (!success)
     {
       glGetProgramInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
-      if (errorCallback)
-        errorCallback(std::string(infoLog));
+      std::cerr << "ProgramInfoLog Error: " << infoLog << std::endl;
     }
   }
   else
@@ -93,8 +133,7 @@ void ShaderProgram::checkShaderError(GLuint shader, GLenum status, bool isProgra
     if (!success)
     {
       glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
-      if (errorCallback)
-        errorCallback(std::string(infoLog));
+      std::cerr << "ShaderInfoLog Error: " << infoLog << std::endl;
     }
   }
 }
@@ -128,6 +167,7 @@ void ShaderProgram::reloadShader(GLenum shaderType, const std::string &shaderPat
   glDeleteShader(newShader); // Delete the new shader since it's now attached to the program
 
   checkShaderError(programID, GL_LINK_STATUS, true);
+  cacheStructuredUniformLocationsAndTypes();
 }
 
 // void ShaderProgram::reloadShader(GLenum shaderType, const std::string& shaderPath) {

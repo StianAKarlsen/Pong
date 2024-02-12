@@ -3,7 +3,7 @@
 #include "ShaderProgramManager.hpp"
 #include "paddle.hpp"
 
-Paddle::Paddle(Vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderProgram) : position(p), height(height), width(width), speed(s), shaderProgram(shaderProgram)
+Paddle::Paddle(glm::vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderProgram) : position(p), height(height), width(width), speed(s), shaderProgram(shaderProgram)
 {
     GLfloat barVertices[8] = {
         width, height,
@@ -49,8 +49,9 @@ void Paddle::render()
     shaderProgram = defaultsp->use();
 
     glBindVertexArray(VAO);
-    // glBindTexture(GL_TEXTURE_2D, textures[0]);
-    // glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
-    glUniform2fv(glGetUniformLocation(shaderProgram, "modelPos"), 1, (const GLfloat *)&position);
+    // glBindTexture(GL_TEXTURE_2D, fbo);
+    // glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), GL_FALSE);
+    // glUniform2fv(glGetUniformLocation(shaderProgram, "modelPos"), 1, (const GLfloat *)&position);
+    defaultsp->setUniform("modelPos", &position);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

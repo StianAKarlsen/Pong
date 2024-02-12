@@ -12,11 +12,11 @@ class Pong
     Paddle playerPaddle, otherPaddle;
     GLuint startTexture;
     GLuint computerScore = 0, playerScore = 0;
-    
+
     GLuint textShaderProgram, shaderProgram, imageShaderProgram;
-    ShaderProgram *defaultsp, *textsp, *imagesp;
+    ShaderProgram *defaultShaderProgram, *textsp, *imagesp;
     GameState currentGameState = GameState::START;
-    
+
     Text text;
     GLFWwindow *window;
 
@@ -25,11 +25,12 @@ class Pong
     GLfloat deltaTime;
 
     GLboolean enterKeyPressedOnce = false;
-    
+
     GLuint backgroundScreenbuffer1;
     GLuint VAO, VBO;
     GLuint backgroundBGTexture;
     GLuint backgroundFGTexture;
+    GLuint fbo;
 
 public:
     Pong(GLFWwindow *window);

@@ -17,6 +17,7 @@
                 "${workspaceRoot}/src/ball.cpp",
                 "${workspaceRoot}/src/paddle.cpp",
                 "${workspaceRoot}/src/ShaderProgramManager.cpp",
+                // "${workspaceRoot}/src/ShaderProgramManager_SetUniforms.cpp",
                 "-Wall",
 				"-I${workspaceRoot}/include",
                 "-L${workspaceRoot}/lib",

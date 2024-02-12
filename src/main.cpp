@@ -15,6 +15,7 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+
 void LoadTexture(std::string file, GLuint &textureID)
 {
     int width, height, nrChannels;
@@ -85,14 +86,14 @@ int main()
 
             glClear(GL_COLOR_BUFFER_BIT);
 
-            pong.Render();
             pong.GameLoop();
+            pong.Render();
             pong.PlayerInput();
 
             glfwSwapBuffers(window);
             glfwPollEvents();
 
-            // sm.reloadShaderIfFileChange();
+            sm.reloadShaderIfFileChange();
         }
     }
 

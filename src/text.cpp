@@ -105,14 +105,11 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
             {xpos + w, ypos + h, 1.0f, 0.0f}};
 
         // Render glyph texture over quad
-        // glUseProgram(textShaderProgram);
-        textsp->use();
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-        glUniform1i(glGetUniformLocation(textShaderProgram, "textureSampler"), 0);
         static const GLfloat pos[] = {0, 0};
-        glUniform2fv(glGetUniformLocation(textShaderProgram, "modelPos"), 1, pos);
+
+        textsp->use();
+        textsp->setTexture("textureSampler",ch.TextureID,0);
+        textsp->setUniform("modelPos", pos);
 
         glBindVertexArray(VAO);
 

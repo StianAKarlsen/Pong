@@ -10,12 +10,12 @@ class Paddle
     ShaderProgram *defaultsp;
 
 public:
-    Vec2 position; // center of paddel
+    glm::vec2 position; // center of paddel
     GLfloat height, width;
     GLfloat speed;
     GLint shaderProgram;
     Paddle() {};
-    Paddle(Vec2 p, GLfloat h, GLfloat w, GLfloat s, GLint shaderProgram);
+    Paddle(glm::vec2 p, GLfloat h, GLfloat w, GLfloat s, GLint shaderProgram);
     void CleanUp();
     void Move(int xDir, GLfloat deltaTime);
     void FollowBall(Ball &ballm, GLfloat deltaTime);

@@ -69,6 +69,7 @@
         "functional": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
+    "cmake.sourceDirectory": "C:/Users/logggi/Projects/Pong/include/glm",
 
 
 

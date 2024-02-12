@@ -5,7 +5,6 @@
 
 ShaderManager &shaderManager = ShaderManager::getInstance();
 
-
 Pong::Pong(GLFWwindow *window) : window(window)
 {
   // std::string path;
@@ -29,25 +28,25 @@ Pong::Pong(GLFWwindow *window) : window(window)
   // textShaderProgram = g_shaderProgramManager.registerShaderProgram(textShaderProgramShaderList);
   // shaderProgram = g_shaderProgramManager.registerShaderProgram(defaultShaderProgramShaderList);
   // imageShaderProgram = g_shaderProgramManager.registerShaderProgram(imageShaderProgramShaderList);
-    
-    auto &shaderManager = ShaderManager::getInstance();
+
+  auto &shaderManager = ShaderManager::getInstance();
 
   shaderManager.createShaderProgram(
       "DefaultShaderProgram",
       {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
        {GL_FRAGMENT_SHADER, "resources/shaders/defaultFragmentShader.glsl"}});
 
-    shaderManager.createShaderProgram(
-        "TextShaderProgram",
-        {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
-         {GL_FRAGMENT_SHADER, "resources/shaders/textFragmentShader.glsl"}});
+  shaderManager.createShaderProgram(
+      "TextShaderProgram",
+      {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
+       {GL_FRAGMENT_SHADER, "resources/shaders/textFragmentShader.glsl"}});
 
   shaderManager.createShaderProgram(
       "ImageShaderProgram",
       {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
        {GL_FRAGMENT_SHADER, "resources/shaders/imageFragmentShader.glsl"}});
-       
-  // defaultsp = shaderManager.getShaderProgram("DefaultShaderProgram");
+
+  defaultShaderProgram = shaderManager.getShaderProgram("DefaultShaderProgram");
   imagesp = shaderManager.getShaderProgram("ImageShaderProgram");
 
   glGenTextures(1, &backgroundBGTexture);
@@ -75,6 +74,17 @@ Pong::Pong(GLFWwindow *window) : window(window)
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const void *)(2 * sizeof(GLfloat)));
 
+  // glGenFramebuffers(1, &fbo);
+  // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  // // Create a texture to hold the framebuffer content
+  // // glGenTextures(1, &backgroundBGTexture);
+  // // glBindTexture(GL_TEXTURE_2D, fbo);
+  // // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo, 0);
+  // // glBindTexture(backgroundBGTexture); //???
+  // // Attach texture to the framebuffer
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundBGTexture, 0);
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
   // glUseProgram(0);
 
   text = Text(textShaderProgram);
@@ -91,17 +101,15 @@ Pong::Pong(GLFWwindow *window) : window(window)
 
 void Pong::RenderFullScreenImage(GLuint textureID)
 {
-  // glUseProgram(imageShaderProgram);
-  GLuint programID = imagesp->use();
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, textureID);
-  glUniform1i(glGetUniformLocation(programID, "screenTexture"), 0);
   static const GLfloat pos[] = {0, 0};
-  glUniform2fv(glGetUniformLocation(programID, "modelPos"), 1, pos);
+  imagesp->use();
+  imagesp->setTexture("screenTexture",textureID, 0);
+  imagesp->setUniform("modelPos", pos);
+
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
   // glBindFramebuffer(GL_FRAMEBUFFER, backgroundScreenbuffer1);
   // glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
   // glClear(GL_COLOR_BUFFER_BIT);
@@ -145,23 +153,26 @@ void Pong::GameLoop()
 
 void Pong::Render()
 {
-
+  // glBindFramebuffer(GL_FRAMEBUFFER, fbo)
   RenderFullScreenImage(backgroundBGTexture);
-  if (currentGameState == GameState::START)
-  {
-    text.RenderText("Enter to", -0.0f, -0.78f, 0.0008f);
-    // text.RenderText("StaRT", -0.0f, -0.8f, 0.0008f);
-  }
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0)
+  defaultShaderProgram->use();
+  defaultShaderProgram->setTexture("screenTexture", backgroundBGTexture, 0);
 
   playerPaddle.render();
   otherPaddle.render();
   ball.render();
 
+  if (currentGameState == GameState::START)
+  {
+    text.RenderText("Enter to", -0.0f, -0.78f, 0.0008f);
+    // text.RenderText("StaRT", -0.0f, -0.8f, 0.0008f);
+  }
   text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
   text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
 
   // if (currentGameState == GameState::START)
-  RenderFullScreenImage(backgroundFGTexture);
+  // RenderFullScreenImage(backgroundFGTexture);
   if (currentGameState == GameState::PAUSED)
     text.RenderText("Pause", -0.5f, -0.03f, 0.005f);
 }
@@ -174,6 +185,12 @@ void Pong::PlayerInput()
       playerPaddle.Move(-1, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move playerbar
       playerPaddle.Move(1, deltaTime);
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) // move playerbar
+    {
+        // ball.ResetBall(-1);
+      glfwGetCursorPos(window, (double*)&ball.position.x, (double*)&ball.position.y);
+    }
   }
 
   // if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
