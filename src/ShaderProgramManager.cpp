@@ -250,6 +250,7 @@ void ShaderManager::deleteShaderProgram(const std::string &name)
 
 void ShaderManager::reloadShaderIfFileChange()
 {
+  //TODO: add cooldown..
   for (auto &[_, sp] : shaderPrograms)
     sp.reload();
 }

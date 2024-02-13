@@ -1,34 +1,42 @@
 #include "defines.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include "ShaderProgramManager.hpp"
 #include "pong.hpp"
 
-ShaderManager &shaderManager = ShaderManager::getInstance();
+static ShaderManager &shaderManager = ShaderManager::getInstance();
+
+
+void LoadTexture(std::string file, GLuint &textureID)
+{
+    int width, height, nrChannels;
+    // unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 Pong::Pong(GLFWwindow *window) : window(window)
 {
-  // std::string path;
-  // GLenum type;
-  // time_t lastModified = 0;
-
-  // ShaderFile defaultVertexShader1{"resources/shaders/defaultVertexShader.glsl", GL_VERTEX_SHADER};
-
-  // std::vector<ShaderFile> defaultShaderProgramShaderList{
-  //     defaultVertexShader1,
-  //     {"resources/shaders/defaultFragmentShader.glsl", GL_FRAGMENT_SHADER}};
-
-  // std::vector<ShaderFile> textShaderProgramShaderList{
-  //     defaultVertexShader1,
-  //     {"resources/shaders/textFragmentShader.glsl", GL_FRAGMENT_SHADER}};
-
-  // std::vector<ShaderFile> imageShaderProgramShaderList{
-  //     defaultVertexShader1,
-  //     {"resources/shaders/imageFragmentShader.glsl", GL_FRAGMENT_SHADER}};
-
-  // textShaderProgram = g_shaderProgramManager.registerShaderProgram(textShaderProgramShaderList);
-  // shaderProgram = g_shaderProgramManager.registerShaderProgram(defaultShaderProgramShaderList);
-  // imageShaderProgram = g_shaderProgramManager.registerShaderProgram(imageShaderProgramShaderList);
-
   auto &shaderManager = ShaderManager::getInstance();
 
   shaderManager.createShaderProgram(
@@ -87,12 +95,12 @@ Pong::Pong(GLFWwindow *window) : window(window)
 
   // glUseProgram(0);
 
-  text = Text(textShaderProgram);
 
-  playerPaddle = Paddle({0.04f, -0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
-  otherPaddle = Paddle({0.00f, 0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
 
-  ball = Ball(shaderProgram, {0, 0}, {0, 1}, 0.01, 0.00011f);
+  playerPaddle = Paddle({0.04f, -0.9}, 0.02f, 0.3f, 0.00007f);
+  otherPaddle = Paddle({0.00f, 0.9}, 0.02f, 0.3f, 0.00007f);
+
+  ball = Ball({0, 0}, {0, 1}, 0.01, 0.00011f);
 
   lastTime = std::chrono::high_resolution_clock::now();
   currentTime = std::chrono::high_resolution_clock::now();
@@ -192,7 +200,8 @@ void Pong::PlayerInput()
       glfwGetCursorPos(window, (double*)&ball.position.x, (double*)&ball.position.y);
     }
   }
-
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // move playerbar
+      glfwSetWindowShouldClose(window, GL_TRUE);
   // if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
   //   shaderManager;
 
