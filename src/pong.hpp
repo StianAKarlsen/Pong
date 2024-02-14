@@ -7,11 +7,6 @@
 #include "ShaderProgramManager.hpp"
 #include "Window.hpp"
 
-class Window;
-// class Ball;
-// class Text;
-// class Paddle;
-
 class Pong
 {
     Ball ball;
