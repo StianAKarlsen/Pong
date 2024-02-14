@@ -13,6 +13,7 @@
                 // "${workspaceRoot}/src/resources.cpp",
                 // "${workspaceRoot}/src/shaderCode.cpp",
                 "${workspaceRoot}/src/pong.cpp",
+                "${workspaceRoot}/src/Window.cpp",
                 "${workspaceRoot}/src/text.cpp",
                 "${workspaceRoot}/src/ball.cpp",
                 "${workspaceRoot}/src/paddle.cpp",

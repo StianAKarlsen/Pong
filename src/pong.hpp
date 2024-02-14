@@ -5,6 +5,12 @@
 #include "paddle.hpp"
 #include "text.hpp"
 #include "ShaderProgramManager.hpp"
+#include "Window.hpp"
+
+class Window;
+// class Ball;
+// class Text;
+// class Paddle;
 
 class Pong
 {
@@ -17,7 +23,9 @@ class Pong
     ShaderProgram *defaultShaderProgram, *textsp, *imagesp;
     GameState currentGameState = GameState::START;
 
-    GLFWwindow *window;
+    Window m_window;
+    GLFWwindow *defaultGLFWwindow;
+    
     Text text;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
@@ -33,9 +41,10 @@ class Pong
     GLuint fbo;
 
 public:
-    Pong(GLFWwindow *window);
+    Pong();
     ~Pong();
 
+    void MainLoop();
     void RenderFullScreenImage(GLuint textureID);
     void GameLoop();
     void PlayerInput();

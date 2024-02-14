@@ -4,39 +4,43 @@
 #include <stb_image.h>
 
 #include "ShaderProgramManager.hpp"
+#include "Window.hpp"
 #include "pong.hpp"
 
 static ShaderManager &shaderManager = ShaderManager::getInstance();
 
-
 void LoadTexture(std::string file, GLuint &textureID)
 {
-    int width, height, nrChannels;
-    // unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
-    unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+  int width, height, nrChannels;
+  // unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
+  unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
+  glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cerr << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-    glBindTexture(GL_TEXTURE_2D, 0);
+  if (data)
+  {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  }
+  else
+  {
+    std::cerr << "Failed to load texture" << std::endl;
+  }
+  stbi_image_free(data);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-Pong::Pong(GLFWwindow *window) : window(window)
+Pong::Pong()
 {
+  if (!glfwInit())
+  {
+    std::cerr << "Failed to initialize GLFW" << std::endl;
+    return;
+  }
   auto &shaderManager = ShaderManager::getInstance();
 
   shaderManager.createShaderProgram(
@@ -95,7 +99,7 @@ Pong::Pong(GLFWwindow *window) : window(window)
 
   // glUseProgram(0);
 
-
+  defaultGLFWwindow = m_window.getWindowHandle();
 
   playerPaddle = Paddle({0.04f, -0.9}, 0.02f, 0.3f, 0.00007f);
   otherPaddle = Paddle({0.00f, 0.9}, 0.02f, 0.3f, 0.00007f);
@@ -107,11 +111,31 @@ Pong::Pong(GLFWwindow *window) : window(window)
   deltaTime = (currentTime - lastTime).count() / 150000.0f;
 }
 
+void Pong::MainLoop()
+{
+  glfwSetWindowUserPointer(defaultGLFWwindow, this);
+
+  ShaderManager &sm = ShaderManager::getInstance();
+  while (!glfwWindowShouldClose(defaultGLFWwindow))
+  {
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    GameLoop();
+    Render();
+    PlayerInput();
+
+    glfwSwapBuffers(defaultGLFWwindow);
+    glfwPollEvents();
+
+    sm.reloadShaderIfFileChange();
+  }
+}
+
 void Pong::RenderFullScreenImage(GLuint textureID)
 {
   static const GLfloat pos[] = {0, 0};
   imagesp->use();
-  imagesp->setTexture("screenTexture",textureID, 0);
+  imagesp->setTexture("screenTexture", textureID, 0);
   imagesp->setUniform("modelPos", pos);
 
   glBindVertexArray(VAO);
@@ -189,24 +213,24 @@ void Pong::PlayerInput()
 {
   if (currentGameState == GameState::RUNNING)
   {
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // move playerbar
+    if (glfwGetKey(defaultGLFWwindow, GLFW_KEY_LEFT) == GLFW_PRESS) // move playerbar
       playerPaddle.Move(-1, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move playerbar
+    if (glfwGetKey(defaultGLFWwindow, GLFW_KEY_RIGHT) == GLFW_PRESS) // move playerbar
       playerPaddle.Move(1, deltaTime);
 
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) // move playerbar
+    if (glfwGetMouseButton(defaultGLFWwindow, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) // move playerbar
     {
-        // ball.ResetBall(-1);
-      glfwGetCursorPos(window, (double*)&ball.position.x, (double*)&ball.position.y);
+      // ball.ResetBall(-1);
+      glfwGetCursorPos(defaultGLFWwindow, (double *)&ball.position.x, (double *)&ball.position.y);
     }
   }
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // move playerbar
-      glfwSetWindowShouldClose(window, GL_TRUE);
-  // if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+  if (glfwGetKey(defaultGLFWwindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) // move playerbar
+    glfwSetWindowShouldClose(defaultGLFWwindow, GL_TRUE);
+  // if (glfwGetKey(defaultGLFWwindow, GLFW_KEY_U) == GLFW_PRESS)
   //   shaderManager;
 
-  if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
-      glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS)
+  if (glfwGetKey(defaultGLFWwindow, GLFW_KEY_ENTER) == GLFW_PRESS ||
+      glfwGetKey(defaultGLFWwindow, GLFW_KEY_KP_ENTER) == GLFW_PRESS)
   {
     if (!enterKeyPressedOnce)
     {
@@ -249,6 +273,8 @@ Pong::~Pong()
 
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
+  
+  glfwTerminate();
 
   // glDeleteProgram(shaderProgram);
   // glDeleteProgram(textShaderProgram);
