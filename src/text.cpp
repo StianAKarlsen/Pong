@@ -3,7 +3,7 @@
 #include "ShaderProgramManager.hpp"
 #include "text.hpp"
 
-Text::Text(GLuint _shaderProgram) : textShaderProgram(_shaderProgram)
+Text::Text()
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -17,9 +17,10 @@ Text::Text(GLuint _shaderProgram) : textShaderProgram(_shaderProgram)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
 
     LoadCharacterTextures();
-    
+
+    //TODO: useless....
     auto &shaderManager = ShaderManager::getInstance();
-    textsp = shaderManager.getShaderProgram("TextShaderProgram");
+    textShaderProgram = shaderManager.getShaderProgram("sazxd");
 };
 
 void Text::LoadCharacterTextures()
@@ -107,9 +108,12 @@ void Text::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale)
         // Render glyph texture over quad
         static const GLfloat pos[] = {0, 0};
 
-        textsp->use();
-        textsp->setTexture("textureSampler",ch.TextureID,0);
-        textsp->setUniform("modelPos", pos);
+        // TODO: textShaderProgram burde ikke trenge å søke hver gang.
+        auto &shaderManager = ShaderManager::getInstance();
+        textShaderProgram = shaderManager.getShaderProgram("TextShaderProgram");
+        textShaderProgram->use();
+        textShaderProgram->setTexture("textureSampler", ch.TextureID, 0);
+        textShaderProgram->setUniform("modelPos", pos);
 
         glBindVertexArray(VAO);
 

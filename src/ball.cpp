@@ -4,8 +4,8 @@
 #include "paddle.hpp"
 #include "ball.hpp"
 
-Ball::Ball(GLint shaderProgram, glm::vec2 p, glm::vec2 v, GLfloat _size, GLfloat s)
-    : shaderProgram(shaderProgram), position(p), direction(v), size(_size), speed(s)
+Ball::Ball(glm::vec2 p, glm::vec2 v, GLfloat _size, GLfloat s)
+    : position(p), direction(v), size(_size), speed(s)
 {
 
     GLfloat ballVertices[8] = {
