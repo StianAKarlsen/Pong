@@ -1,245 +1,256 @@
-// #AI generert.
-
-#include "defines.hpp"
+// #AI + meg
 
 #include "ShaderProgramManager.hpp"
 
-#include <fstream>
-#include <thread>
-#include <sstream>
-#include <iostream>
-#include <sys/stat.h> // For stat(), to get file modification times
-
-ShaderProgramManager::ShaderProgramManager()
+ShaderProgram::ShaderProgram(const std::map<GLenum, std::string> &shaders)
 {
-  lastTime = std::chrono::steady_clock::now();
-
-  std::chrono::seconds refreshRate = std::chrono::seconds(60);
-}
-
-ShaderProgramManager::~ShaderProgramManager()
-{
-  // Delete all shader programs on destruction
-  for (auto &entry : shaderPrograms)
+  programID = glCreateProgram();
+  for (const auto &shader : shaders)
   {
-    glDeleteProgram(entry.first);
+    auto compiledShader = loadShaderFromFile(shader.second, shader.first);
+    glAttachShader(programID, compiledShader);
+    glDeleteShader(compiledShader); // Delete shader after attaching
+
+    shaderFiles[shader.first] =
+        std::pair<std::string, std::filesystem::file_time_type>(
+            shader.second,
+            std::filesystem::last_write_time(shader.second));
   }
-}
-
-GLuint ShaderProgramManager::registerShaderProgram(const std::vector<ShaderFile> &shaders)
-{
-  std::vector<GLuint> shaderIDs;
-  bool needToLink = false;
-  
-  std::unordered_map<GLenum, GLuint> tmpMapShaderIDs;
-  
-  // Attempt to compile each shader
-  for (const auto &shaderFile : shaders)
-  {
-    if (isShaderFileModified(shaderFile))
-    {
-      GLuint shaderID = compileShader(shaderFile.path, shaderFile.type);
-      if (shaderID != 0)
-      { // Compilation success
-        shaderIDs.push_back(shaderID);
-        tmpMapShaderIDs[shaderFile.type] = shaderID;
-
-        needToLink = true;
-      }
-      else
-      {
-        std::cerr << "Failed to compile shader: " << shaderFile.path << std::endl;
-      }
-    }
-  }
-
-  // Only proceed to link if there are new or updated shaders
-  if (needToLink)
-  {
-    GLuint programID = linkShadersIntoProgram(shaderIDs);
-    if (programID != 0)
-    {
-
-      // If linking succeeded, update program map and clean up
-      ShaderProgram program = {programID, shaders, tmpMapShaderIDs};
-      for (auto &shader : program.shaders)
-      {
-        updateShaderFileTimestamp(shader);
-      }
-      shaderPrograms[programID] = program;
-      detachAndDeleteShaders(programID, shaderIDs);
-      return programID;
-    }
-    else
-    {
-      std::cerr << "Failed to link shader program." << std::endl;
-    }
-  }
-  return 0;
-}
-
-void ShaderProgramManager::useProgram(GLuint programID)
-{
-  // if (shaderPrograms.find(programID) != shaderPrograms.end())
-  // {
-  glUseProgram(programID);
-  // }
-}
-
-// void tead = []()
-// {
-//       for (auto &entry : shaderPrograms)
-//     {
-//       registerShaderProgram(entry.second.shaders);
-//     }
-// };
-
-void ShaderProgramManager::reloadShadersIfNeeded()
-{
-  // std::thread s(thread());
-  // if(s.joinable())
-  //   s.join();
-  // currentTime = std::chrono::steady_clock::now();
-  // auto sek = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime);
-  // if (sek >= refreshRate)
-
-  for (auto &[programID, program] : shaderPrograms)
-  {
-    bool programUpdated = false;
-    for (auto &shaderFile : program.shaders)
-    {
-      if (isShaderFileModified(shaderFile))
-      {
-        GLuint newShaderID = compileShader(shaderFile.path, shaderFile.type);
-
-        if (newShaderID != 0)
-        {
-          // Replace the old shader with the new one in the program
-          glDetachShader(programID, program.shaderIDs[shaderFile.type]);
-          glDeleteShader(program.shaderIDs[shaderFile.type]);
-          glAttachShader(programID, newShaderID);
-
-          // Update the shader ID in the program structure
-          program.shaderIDs[shaderFile.type] = newShaderID;
-          programUpdated = true;
-          updateShaderFileTimestamp(shaderFile); // Update timestamp after successful recompilation
-        }
-      }
-    }
-    if (programUpdated)
-    {
-      // Relink the program if any of its shaders were updated
-      glLinkProgram(programID);
-
-      GLint success;
-      glGetProgramiv(programID, GL_LINK_STATUS, &success);
-      if (!success)
-      {
-        GLchar infoLog[512];
-        glGetProgramInfoLog(programID, 512, nullptr, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n"
-                  << infoLog << std::endl;
-        glDeleteProgram(programID); // Don't leak the program.
-      }
-    }
-  }
-
-  // for (auto &entry : shaderPrograms)
-  // {
-  //   // lastTime = currentTime;
-  //   registerShaderProgram(entry.second.shaders);
-  // }
-}
-
-GLuint ShaderProgramManager::compileShader(const std::string &shaderPath, GLenum shaderType)
-{
-  std::ifstream shaderFile(shaderPath);
-  if (!shaderFile.is_open())
-  {
-    std::cerr << "Failed to open shader file: " << shaderPath << std::endl;
-    return 0;
-  }
-  std::stringstream shaderData;
-  shaderData << shaderFile.rdbuf();
-  shaderFile.close();
-
-  std::string shaderCode = shaderData.str();
-  const char *shaderSource = shaderCode.c_str();
-
-  GLuint shaderID = glCreateShader(shaderType);
-  glShaderSource(shaderID, 1, &shaderSource, nullptr);
-  glCompileShader(shaderID);
-
-  GLint success;
-  glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-  if (!success)
-  {
-    GLchar infoLog[512];
-    glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
-    std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n"
-              << infoLog << std::endl;
-
-    glDeleteShader(shaderID); // Don't leak the shader.
-    return 0;
-  }
-
-  return shaderID;
-}
-
-GLuint ShaderProgramManager::linkShadersIntoProgram(const std::vector<GLuint> &shaderIDs)
-{
-  GLuint programID = glCreateProgram();
-  for (GLuint shaderID : shaderIDs)
-  {
-    glAttachShader(programID, shaderID);
-  }
+  // updateLastModifiedTimes();
   glLinkProgram(programID);
+  checkShaderError(programID, GL_LINK_STATUS, true);
+  cacheStructuredUniformLocationsAndTypes();
+}
 
-  GLint success;
-  glGetProgramiv(programID, GL_LINK_STATUS, &success);
-  if (!success)
+ShaderProgram::~ShaderProgram()
+{
+  glDeleteProgram(programID);
+}
+
+void ShaderProgram::cacheStructuredUniformLocationsAndTypes()
+{
+  uniformLocations.clear();
+  GLint numUniforms = 0;
+  glGetProgramiv(programID, GL_ACTIVE_UNIFORMS, &numUniforms);
+
+  for (GLint i = 0; i < numUniforms; ++i)
   {
-    GLchar infoLog[512];
-    glGetProgramInfoLog(programID, 512, nullptr, infoLog);
-    std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n"
-              << infoLog << std::endl;
-    glDeleteProgram(programID); // Don't leak the program.
-    return 0;
-  }
+    char uniformName[256]; // Buffer for uniform name
+    GLsizei length;
+    GLint size;  // Size of the uniform variable
+    GLenum type; // Type of the uniform variable
+                 // typedef void (GLAPIENTRY * PFNGLGETACTIVEATTRIBPROC) (GLuint program, GLuint index, GLsizei maxLength, GLsizei* length, GLint* size, GLenum* type, GLchar* name);
+    glGetActiveUniform(programID, i, sizeof(uniformName), &length, &size, &type, uniformName);
+    GLint location = glGetUniformLocation(programID, std::string(uniformName).c_str());
 
+    // Here uniformName could be something like "Light.position"
+    // This stores the location of each field of the struct as well
+    uniformLocations[std::string(uniformName)] = std::pair<GLuint, GLenum>(location, type);
+  }
+}
+
+// void ShaderProgram::setUniform(const std::string &name, void *value)
+// {
+//   GLint &location = uniformLocations[name].first;
+//   GLenum &type = uniformLocations[name].second;
+
+//   switch (type)
+//   {
+//   case GL_FLOAT:
+//     glGetUniformivARB(location, *(GLfloat *)value);
+//     break;
+//   case GL_TEXTURE_2D:
+//     glBindTexture(GL_TEXTURE_2D, *(GLuint *)value);
+//     glUniform1i(location, *(GLint *)value);
+//   case GL_INT_VEC2:
+//     __glewUniform2iv(location, 1,(const GLint *)value);
+//     break;
+//   default:
+//     break;
+//   }
+// }
+
+GLuint ShaderProgram::use()
+{
+  glUseProgram(programID);
   return programID;
 }
 
-bool ShaderProgramManager::isShaderFileModified(const ShaderFile &shaderFile)
+void ShaderProgram::reload()
 {
-  struct stat fileStat;
-  if (stat(shaderFile.path.c_str(), &fileStat) != 0)
+  for (auto &[type, pair] : shaderFiles)
   {
-    std::cerr << "Failed to get file stats for: " << shaderFile.path << std::endl;
-    return false;
-  }
-  return fileStat.st_mtime > shaderFile.lastModified;
-}
-
-void ShaderProgramManager::updateShaderFileTimestamp(ShaderFile &shaderFile)
-{
-  struct stat fileStat;
-  if (stat(shaderFile.path.c_str(), &fileStat) == 0)
-  {
-    shaderFile.lastModified = fileStat.st_mtime;
+    auto &[path, _] = pair; // Ignore the last modified time here
+    reloadShader(type, path);
   }
 }
 
-void ShaderProgramManager::cleanupShaderProgram(GLuint programID)
+void ShaderProgram::checkAndReloadUpdatedShaders()
 {
-  // This function would be used to delete old programs if necessary
+  updateLastModifiedTimes();
+  for (auto &fileInfo : updateQueue)
+  {
+    reloadShader(fileInfo.type, fileInfo.path);
+  }
+  updateQueue.clear(); // Clear the queue after reloading shaders
 }
 
-void ShaderProgramManager::detachAndDeleteShaders(GLuint programID, const std::vector<GLuint> &shaderIDs)
+GLuint ShaderProgram::loadShaderFromFile(const std::string &path, GLenum type)
 {
-  for (GLuint shaderID : shaderIDs)
+  std::ifstream shaderFile(path);
+  std::stringstream shaderData;
+  shaderData << shaderFile.rdbuf();
+  shaderFile.close();
+  return compileShader(shaderData.str(), type);
+}
+
+GLuint ShaderProgram::compileShader(const std::string &source, GLenum type)
+{
+  GLuint shader = glCreateShader(type);
+  const char *src = source.c_str();
+  glShaderSource(shader, 1, &src, nullptr);
+  glCompileShader(shader);
+  checkShaderError(shader, GL_COMPILE_STATUS, false);
+  return shader;
+}
+
+void ShaderProgram::checkShaderError(GLuint shader, GLenum status, bool isProgram)
+{
+  GLint success;
+  GLchar infoLog[1024];
+  if (isProgram)
   {
-    glDetachShader(programID, shaderID);
-    glDeleteShader(shaderID);
+    glGetProgramiv(shader, status, &success);
+    if (!success)
+    {
+      glGetProgramInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
+      std::cerr << "ProgramInfoLog Error: " << infoLog << std::endl;
+    }
   }
+  else
+  {
+    glGetShaderiv(shader, status, &success);
+    if (!success)
+    {
+      glGetShaderInfoLog(shader, sizeof(infoLog), nullptr, infoLog);
+      std::cerr << "ShaderInfoLog Error: " << infoLog << std::endl;
+    }
+  }
+}
+
+void ShaderProgram::reloadShader(GLenum shaderType, const std::string &shaderPath)
+{
+  // Create a new shader from the file
+  GLuint newShader = loadShaderFromFile(shaderPath, shaderType);
+
+  // Detach and delete the old shader of the same type, if it exists
+  GLint attachedShaders = 0;
+  glGetProgramiv(programID, GL_ATTACHED_SHADERS, &attachedShaders);
+  std::vector<GLuint> shaders(attachedShaders);
+  glGetAttachedShaders(programID, attachedShaders, nullptr, shaders.data());
+
+  for (GLuint oldShader : shaders)
+  {
+    GLint type;
+    glGetShaderiv(oldShader, GL_SHADER_TYPE, &type);
+    if (type == static_cast<GLint>(shaderType))
+    {
+      glDetachShader(programID, oldShader);
+      glDeleteShader(oldShader);
+      break; // Assuming only one shader of each type is attached
+    }
+  }
+
+  // Attach the new shader and re-link the program
+  glAttachShader(programID, newShader);
+  glLinkProgram(programID);
+  glDeleteShader(newShader); // Delete the new shader since it's now attached to the program
+
+  checkShaderError(programID, GL_LINK_STATUS, true);
+  cacheStructuredUniformLocationsAndTypes();
+}
+
+// void ShaderProgram::reloadShader(GLenum shaderType, const std::string& shaderPath) {
+//     GLuint newShader = loadShaderFromFile(shaderPath, shaderType);
+//     // Replace the old shader with the new shader in the program
+//     glAttachShader(programID, newShader);
+//     glLinkProgram(programID); // Re-link program with the new shader
+//     glDeleteShader(newShader); // Delete the new shader as it's now attached to the program
+
+//     checkShaderError(programID, GL_LINK_STATUS, true);
+// }
+
+void ShaderProgram::updateLastModifiedTimes()
+{
+  // Iterate over shaderFiles to check for updates
+  for (auto &[type, pair] : shaderFiles)
+  {
+    auto &[path, lastModifiedTime] = pair;
+    auto currentModifiedTime = std::filesystem::last_write_time(path);
+    if (currentModifiedTime > lastModifiedTime)
+    {
+      updateQueue.emplace_back(type, path);
+      lastModifiedTime = currentModifiedTime;
+    }
+  }
+
+  // Sort updateQueue to have the most recently modified files at the end
+  std::sort(updateQueue.begin(), updateQueue.end());
+
+  // Keep only the last 3 updated files
+  if (updateQueue.size() > 3)
+  {
+    updateQueue.erase(updateQueue.begin(), updateQueue.end() - 3);
+  }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+ShaderManager &ShaderManager::getInstance()
+{
+  static ShaderManager instance; // Instantiated on first use, guaranteed to be destroyed
+  return instance;
+}
+
+// ShaderManager& ShaderManager::getInstance() {
+//     static ShaderManager instance; // Instantiated on first use, guaranteed to be destroyed
+//     return instance;
+// }
+
+ShaderProgram &ShaderManager::createShaderProgram(const std::string &name, const std::map<GLenum, std::string> &shaderPaths)
+{
+  // Check if a shader program with the same name already exists
+  auto it = shaderPrograms.find(name);
+  if (it != shaderPrograms.end())
+  {
+    // Optionally, handle error or update existing shader program
+    throw std::runtime_error("Shader program with the given name already exists.");
+  }
+
+  // Create and insert the shader program
+  ShaderProgram program(shaderPaths); // Assuming ShaderProgram can be constructed this way
+  shaderPrograms[name] = std::move(program);
+  return shaderPrograms[name];
+}
+
+ShaderProgram *ShaderManager::getShaderProgram(const std::string &name)
+{
+  auto it = shaderPrograms.find(name);
+  if (it != shaderPrograms.end())
+  {
+    return &it->second;
+  }
+  return nullptr; // or throw an exception if preferred
+}
+
+void ShaderManager::deleteShaderProgram(const std::string &name)
+{
+  shaderPrograms.erase(name);
+}
+
+void ShaderManager::reloadShaderIfFileChange()
+{
+  //TODO: add cooldown..
+  for (auto &[_, sp] : shaderPrograms)
+    sp.reload();
 }

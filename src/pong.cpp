@@ -1,66 +1,61 @@
 #include "defines.hpp"
 
-#include "pong.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include "ShaderProgramManager.hpp"
+#include "pong.hpp"
+
+static ShaderManager &shaderManager = ShaderManager::getInstance();
+
+
+void LoadTexture(std::string file, GLuint &textureID)
+{
+    int width, height, nrChannels;
+    // unsigned char *data = stbi_load_from_memory(image, size, &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(file.c_str(), &width, &height, &nrChannels, 0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 Pong::Pong(GLFWwindow *window) : window(window)
 {
-  // std::string path;
-  // GLenum type;
-  // time_t lastModified = 0;
+  auto &shaderManager = ShaderManager::getInstance();
 
-  ShaderFile defaultVertexShader1{"resources/shaders/defaultVertexShader.glsl", GL_VERTEX_SHADER};
+  shaderManager.createShaderProgram(
+      "DefaultShaderProgram",
+      {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
+       {GL_FRAGMENT_SHADER, "resources/shaders/defaultFragmentShader.glsl"}});
 
-  std::vector<ShaderFile> defaultShaderProgramShaderList{
-      defaultVertexShader1,
-      {"resources/shaders/defaultFragmentShader.glsl", GL_FRAGMENT_SHADER}};
+  shaderManager.createShaderProgram(
+      "TextShaderProgram",
+      {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
+       {GL_FRAGMENT_SHADER, "resources/shaders/textFragmentShader.glsl"}});
 
-  std::vector<ShaderFile> textShaderProgramShaderList{
-      defaultVertexShader1,
-      {"resources/shaders/textFragmentShader.glsl", GL_FRAGMENT_SHADER}};
+  shaderManager.createShaderProgram(
+      "ImageShaderProgram",
+      {{GL_VERTEX_SHADER, "resources/shaders/defaultVertexShader.glsl"},
+       {GL_FRAGMENT_SHADER, "resources/shaders/imageFragmentShader.glsl"}});
 
-  std::vector<ShaderFile> imageShaderProgramShaderList{
-      defaultVertexShader1,
-      {"resources/shaders/imageFragmentShader.glsl", GL_FRAGMENT_SHADER}};
-
-  textShaderProgram = g_shaderProgramManager.registerShaderProgram(textShaderProgramShaderList);
-  shaderProgram = g_shaderProgramManager.registerShaderProgram(defaultShaderProgramShaderList);
-  imageShaderProgram = g_shaderProgramManager.registerShaderProgram(imageShaderProgramShaderList);
-
-  // GLuint defaultVertexShader = glCreateShader(GL_VERTEX_SHADER);
-  // GLuint defaultFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  // GLuint textFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  // GLuint imageFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-  // glShaderSource(defaultVertexShader, 1, &defaultVertexShaderSource, nullptr);
-  // glShaderSource(textFragmentShader, 1, &textFragmentShaderSource, nullptr);
-  // glShaderSource(defaultFragmentShader, 1, &defaultFragmentShaderSource, nullptr);
-  // glShaderSource(imageFragmentShader, 1, &imageFragmentShaderSource, nullptr);
-
-  // glCompileShader(defaultVertexShader);
-  // glCompileShader(defaultFragmentShader);
-  // glCompileShader(textFragmentShader);
-  // glCompileShader(imageFragmentShader);
-
-  // shaderProgram = glCreateProgram();
-  // glAttachShader(shaderProgram, defaultVertexShader);
-  // glAttachShader(shaderProgram, defaultFragmentShader);
-  // glLinkProgram(shaderProgram);
-
-  // textShaderProgram = glCreateProgram();
-  // glAttachShader(textShaderProgram, defaultVertexShader);
-  // glAttachShader(textShaderProgram, textFragmentShader);
-  // glLinkProgram(textShaderProgram);
-
-  // imageShaderProgram = glCreateProgram();
-  // glAttachShader(imageShaderProgram, defaultVertexShader);
-  // glAttachShader(imageShaderProgram, imageFragmentShader);
-  // glLinkProgram(imageShaderProgram);
-
-  // glDeleteShader(defaultVertexShader);
-  // glDeleteShader(defaultFragmentShader);
-  // glDeleteShader(textFragmentShader);
-  // glDeleteShader(imageFragmentShader);
+  defaultShaderProgram = shaderManager.getShaderProgram("DefaultShaderProgram");
+  imagesp = shaderManager.getShaderProgram("ImageShaderProgram");
 
   glGenTextures(1, &backgroundBGTexture);
   glGenTextures(1, &backgroundFGTexture);
@@ -87,14 +82,25 @@ Pong::Pong(GLFWwindow *window) : window(window)
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const void *)(2 * sizeof(GLfloat)));
 
+  // glGenFramebuffers(1, &fbo);
+  // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  // // Create a texture to hold the framebuffer content
+  // // glGenTextures(1, &backgroundBGTexture);
+  // // glBindTexture(GL_TEXTURE_2D, fbo);
+  // // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo, 0);
+  // // glBindTexture(backgroundBGTexture); //???
+  // // Attach texture to the framebuffer
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundBGTexture, 0);
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
   // glUseProgram(0);
 
-  text = Text(textShaderProgram);
 
-  playerPaddle = Paddle({0.04f, -0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
-  otherPaddle = Paddle({0.00f, 0.9}, 0.02f, 0.3f, 0.00007f, shaderProgram);
 
-  ball = Ball(shaderProgram, {0, 0}, {0, 1}, 0.01, 0.00011f);
+  playerPaddle = Paddle({0.04f, -0.9}, 0.02f, 0.3f, 0.00007f);
+  otherPaddle = Paddle({0.00f, 0.9}, 0.02f, 0.3f, 0.00007f);
+
+  ball = Ball({0, 0}, {0, 1}, 0.01, 0.00011f);
 
   lastTime = std::chrono::high_resolution_clock::now();
   currentTime = std::chrono::high_resolution_clock::now();
@@ -103,16 +109,15 @@ Pong::Pong(GLFWwindow *window) : window(window)
 
 void Pong::RenderFullScreenImage(GLuint textureID)
 {
-  glUseProgram(imageShaderProgram);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, textureID);
-  glUniform1i(glGetUniformLocation(imageShaderProgram, "screenTexture"), 0);
   static const GLfloat pos[] = {0, 0};
-  glUniform2fv(glGetUniformLocation(imageShaderProgram, "modelPos"), 1, pos);
+  imagesp->use();
+  imagesp->setTexture("screenTexture",textureID, 0);
+  imagesp->setUniform("modelPos", pos);
+
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
   // glBindFramebuffer(GL_FRAMEBUFFER, backgroundScreenbuffer1);
   // glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
   // glClear(GL_COLOR_BUFFER_BIT);
@@ -156,23 +161,26 @@ void Pong::GameLoop()
 
 void Pong::Render()
 {
-
+  // glBindFramebuffer(GL_FRAMEBUFFER, fbo)
   RenderFullScreenImage(backgroundBGTexture);
-  if (currentGameState == GameState::START)
-  {
-    text.RenderText("Enter to", -0.0f, -0.78f, 0.0008f);
-    // text.RenderText("StaRT", -0.0f, -0.8f, 0.0008f);
-  }
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0)
+  defaultShaderProgram->use();
+  defaultShaderProgram->setTexture("screenTexture", backgroundBGTexture, 0);
 
   playerPaddle.render();
   otherPaddle.render();
   ball.render();
 
+  if (currentGameState == GameState::START)
+  {
+    text.RenderText("Enter to", -0.0f, -0.78f, 0.0008f);
+    // text.RenderText("StaRT", -0.0f, -0.8f, 0.0008f);
+  }
   text.RenderText(std::to_string(playerScore), -0.51f, -0.03f, 0.001f);
   text.RenderText(std::to_string(computerScore), 0.51f, -0.03f, 0.001f);
 
   // if (currentGameState == GameState::START)
-  RenderFullScreenImage(backgroundFGTexture);
+  // RenderFullScreenImage(backgroundFGTexture);
   if (currentGameState == GameState::PAUSED)
     text.RenderText("Pause", -0.5f, -0.03f, 0.005f);
 }
@@ -185,13 +193,20 @@ void Pong::PlayerInput()
       playerPaddle.Move(-1, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move playerbar
       playerPaddle.Move(1, deltaTime);
-  }
 
-  if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // move playerbar
-    g_shaderProgramManager.reloadShadersIfNeeded();
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) // move playerbar
+    {
+        // ball.ResetBall(-1);
+      glfwGetCursorPos(window, (double*)&ball.position.x, (double*)&ball.position.y);
+    }
+  }
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // move playerbar
+      glfwSetWindowShouldClose(window, GL_TRUE);
+  // if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+  //   shaderManager;
 
   if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
-      glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) // move playerbar
+      glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS)
   {
     if (!enterKeyPressedOnce)
     {

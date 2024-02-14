@@ -6,17 +6,18 @@
 			"label": "C/C++: g++.exe build active file",
 			"command": "C:/msys64/mingw64/bin/g++.exe",
 			"args": [
-				// "-fdiagnostics-color=always",
+				"-fdiagnostics-color=always",
 				"-g",
 				// "-O3",
                 "${workspaceRoot}/src/main.cpp",
-                "${workspaceRoot}/src/resources.cpp",
+                // "${workspaceRoot}/src/resources.cpp",
                 // "${workspaceRoot}/src/shaderCode.cpp",
                 "${workspaceRoot}/src/pong.cpp",
                 "${workspaceRoot}/src/text.cpp",
                 "${workspaceRoot}/src/ball.cpp",
                 "${workspaceRoot}/src/paddle.cpp",
                 "${workspaceRoot}/src/ShaderProgramManager.cpp",
+                // "${workspaceRoot}/src/ShaderProgramManager_SetUniforms.cpp",
                 "-Wall",
 				"-I${workspaceRoot}/include",
                 "-L${workspaceRoot}/lib",
@@ -27,7 +28,8 @@
 				"-lfreetype",
 				// "-mwindows",
 				"-o",
-				"${workspaceRoot}/bin/pong.exe"
+				"${workspaceRoot}/bin/pong.exe",
+				"-std=c++17"
 			],
 			"options": {
 				"cwd": "C:/msys64/mingw64/bin"

@@ -1,27 +1,29 @@
 #ifndef _BALL_HPP_
 #define _BALL_HPP_
 
+#include "ShaderProgramManager.hpp"
 class Paddle;
 
 class Ball
 {
     GLuint VAO, VBO;
-    GLint shaderProgram;
+    ShaderProgram *defaultsp;
 
 public:
-    Vec2 position; // center of ball
-    Vec2 direction;
+    glm::vec2 position; // center of ball
+    glm::vec2 direction;
     GLfloat size;
     GLfloat speed;
     GLboolean bounceOnce = true;
     GLboolean bounceOffWallOnce = true;
+
 
 private:
 
 
 public:
     Ball(){};
-    Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s);
+    Ball(glm::vec2 p, glm::vec2 v, GLfloat _size, GLfloat s);
     void CleanUp();
     void Move(GLfloat deltaTime);
 

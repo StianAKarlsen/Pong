@@ -1,10 +1,11 @@
 #include "defines.hpp"
 
+#include "ShaderProgramManager.hpp"
 #include "paddle.hpp"
 
-Paddle::Paddle(Vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderProgram) : position(p), height(height), width(width), speed(s), shaderProgram(shaderProgram)
+Paddle::Paddle(glm::vec2 p, GLfloat height, GLfloat width, GLfloat s) : position(p), height(height), width(width), speed(s)
 {
-     GLfloat barVertices[8] = {
+    GLfloat barVertices[8] = {
         width, height,
         -width, height,
         width, -height,
@@ -18,6 +19,9 @@ Paddle::Paddle(Vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderPro
     glBufferData(GL_ARRAY_BUFFER, sizeof(barVertices), barVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+    auto &sm = ShaderManager::getInstance();
+    defaultsp = sm.getShaderProgram("DefaultShaderProgram");
 }
 
 void Paddle::CleanUp()
@@ -41,11 +45,13 @@ void Paddle::FollowBall(Ball &ball, GLfloat deltaTime)
 
 void Paddle::render()
 {
-    glUseProgram(shaderProgram);
+    // glUseProgram(shaderProgram);
+    defaultsp->use();
 
     glBindVertexArray(VAO);
-    // glBindTexture(GL_TEXTURE_2D, textures[0]);
-    // glUniform1i(glGetUniformLocation(shaderProgram, "useTexture"), GL_FALSE);
-    glUniform2fv(glGetUniformLocation(shaderProgram, "modelPos"), 1, (const GLfloat *)&position);
+    // glBindTexture(GL_TEXTURE_2D, fbo);
+    // glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), GL_FALSE);
+    // glUniform2fv(glGetUniformLocation(shaderProgram, "modelPos"), 1, (const GLfloat *)&position);
+    defaultsp->setUniform("modelPos", &position);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

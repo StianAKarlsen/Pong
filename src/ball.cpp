@@ -1,10 +1,11 @@
 #include "defines.hpp"
 
+// #include "ShaderProgramManager.hpp"
 #include "paddle.hpp"
 #include "ball.hpp"
 
-Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s)
-    : shaderProgram(shaderProgram), position(p), direction(v), size(_size), speed(s)
+Ball::Ball(glm::vec2 p, glm::vec2 v, GLfloat _size, GLfloat s)
+    : position(p), direction(v), size(_size), speed(s)
 {
 
     GLfloat ballVertices[8] = {
@@ -21,6 +22,9 @@ Ball::Ball(GLint shaderProgram, Vec2 p, Vec2 v, GLfloat _size, GLfloat s)
     glBufferData(GL_ARRAY_BUFFER, sizeof(ballVertices), ballVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+
+    auto &sm = ShaderManager::getInstance();
+    defaultsp = sm.getShaderProgram("DefaultShaderProgram");
 }
 
 void Ball::CleanUp()
@@ -46,7 +50,7 @@ void Ball::CheckCollisionAndBounce(Paddle &paddle)
         if (bounceOnce)
         {
             // PlaySound((LPCSTR)bounceSound_wav, NULL, SND_MEMORY | SND_ASYNC);
-            PlaySound(TEXT("resources/bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
+            PlaySound(TEXT("resources/bounceSound1.wav"), NULL, SND_FILENAME | SND_ASYNC);
             // MessageBeep(MB_ICONWARNING);
             BounceBall(paddle);
             if (direction.y < 0)
@@ -77,8 +81,8 @@ void Ball::bounceOffWall()
     {
         if (bounceOffWallOnce)
         {
-            PlaySound((LPCSTR)bounceSound_wav, NULL, SND_MEMORY | SND_ASYNC);
-            // PlaySound(TEXT("bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
+            // PlaySound((LPCSTR)bounceSound_wav, NULL, SND_MEMORY | SND_ASYNC);
+            PlaySound(TEXT("resources/bounceSound0.wav"), NULL, SND_FILENAME | SND_ASYNC);
             direction.x *= -1;
             bounceOffWallOnce = false;
         }
@@ -99,8 +103,9 @@ void Ball::ResetBall(int dir)
 
 void Ball::render()
 {
-    glUseProgram(shaderProgram);
+    defaultsp->use();
+    defaultsp->setUniform("modelPos",&position);
+
     glBindVertexArray(VAO);
-    glUniform2fv(0, 1, (const GLfloat *)&position);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
