@@ -10,7 +10,7 @@
 				"-g",
 				// "-O3",
                 "${workspaceRoot}/src/main.cpp",
-                "${workspaceRoot}/src/resources.cpp",
+                // "${workspaceRoot}/src/resources.cpp",
                 // "${workspaceRoot}/src/shaderCode.cpp",
                 "${workspaceRoot}/src/pong.cpp",
                 "${workspaceRoot}/src/text.cpp",

@@ -3,7 +3,7 @@
 #include "ShaderProgramManager.hpp"
 #include "paddle.hpp"
 
-Paddle::Paddle(glm::vec2 p, GLfloat height, GLfloat width, GLfloat s, GLint shaderProgram) : position(p), height(height), width(width), speed(s), shaderProgram(shaderProgram)
+Paddle::Paddle(glm::vec2 p, GLfloat height, GLfloat width, GLfloat s) : position(p), height(height), width(width), speed(s)
 {
     GLfloat barVertices[8] = {
         width, height,
@@ -46,7 +46,7 @@ void Paddle::FollowBall(Ball &ball, GLfloat deltaTime)
 void Paddle::render()
 {
     // glUseProgram(shaderProgram);
-    shaderProgram = defaultsp->use();
+    defaultsp->use();
 
     glBindVertexArray(VAO);
     // glBindTexture(GL_TEXTURE_2D, fbo);

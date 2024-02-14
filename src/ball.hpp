@@ -7,7 +7,6 @@ class Paddle;
 class Ball
 {
     GLuint VAO, VBO;
-    GLint shaderProgram;
     ShaderProgram *defaultsp;
 
 public:
@@ -24,7 +23,7 @@ private:
 
 public:
     Ball(){};
-    Ball(GLint shaderProgram, glm::vec2 p, glm::vec2 v, GLfloat _size, GLfloat s);
+    Ball(glm::vec2 p, glm::vec2 v, GLfloat _size, GLfloat s);
     void CleanUp();
     void Move(GLfloat deltaTime);
 
